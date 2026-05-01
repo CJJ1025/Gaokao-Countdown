@@ -1,692 +1,547 @@
-const defaultSettings = {
-    showCustomTimers: true,
-    showClock: false,
-    showGaokao: true,
-    showLongFormat: true,
-    customTimersOrder: 1,
-    clockOrder: 2,
-    gaokaoOrder: 3,
-    customTimersSize: 4.5,
-    specialTimerSize: 12,
-    clockSize: 5
+const GAOKAO_DATE = new Date('2026-06-07T00:00:00');
+
+const defaultSchedule = [
+    { id: 1, label: '小练时间', days: [1, 2, 3, 4, 5], start: '18:50', end: '19:20' },
+    { id: 2, label: '自修时间', days: [1, 2, 3, 4, 5], start: '19:20', end: '20:00' },
+    { id: 3, label: '自修时间', days: [1, 2, 3, 4, 5], start: '20:10', end: '20:50' },
+    { id: 4, label: '晚读时间', days: [1, 2, 3, 4, 5], start: '20:50', end: '21:10' },
+    { id: 5, label: '自修时间', days: [1, 2, 3, 4, 5], start: '21:20', end: '22:00' }
+];
+
+const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+let state = {
+    timerInterval: null,
+    timerRemaining: 0,
+    currentPeriod: null,
+    isRunning: false,
+    schedule: [],
+    settings: {
+        gaokaoDate: '2026-06-07',
+        showTimeWithCountdown: false,
+        currentTheme: 'vscode',
+        customCss: {}
+    }
 };
 
-let settings = { ...defaultSettings };
+function init() {
+    try {
+        loadSettings();
+        loadSchedule();
+    } catch (e) {
+        console.error('初始化加载数据失败:', e);
+        localStorage.clear();
+    }
+    
+    initEventListeners();
+    applyTheme(state.settings.currentTheme);
+    updateCurrentTime();
+    updateGaokaoCountdown();
+    checkSchedule();
+    
+    setInterval(updateCurrentTime, 1000);
+    setInterval(updateGaokaoCountdown, 1000);
+    setInterval(checkSchedule, 1000);
+}
 
 function loadSettings() {
     const saved = localStorage.getItem('clockSettings');
     if (saved) {
-        settings = { ...defaultSettings, ...JSON.parse(saved) };
+        try {
+            state.settings = { ...state.settings, ...JSON.parse(saved) };
+        } catch (e) {
+            console.error('Failed to load settings', e);
+        }
     }
-    applySettings();
-    updateSettingsUI();
+    
+    document.getElementById('gaokaoDate').value = state.settings.gaokaoDate;
+    document.getElementById('showTimeWithCountdown').checked = state.settings.showTimeWithCountdown;
 }
 
 function saveSettings() {
-    localStorage.setItem('clockSettings', JSON.stringify(settings));
+    localStorage.setItem('clockSettings', JSON.stringify(state.settings));
 }
 
-function applySettings() {
-    document.querySelector('.custom-timers-section').style.display = settings.showCustomTimers ? 'block' : 'none';
-    document.querySelector('.clock-section').style.display = settings.showClock ? 'block' : 'none';
-    document.querySelector('.gaokao-section').style.display = settings.showGaokao ? 'block' : 'none';
-
-    const container = document.querySelector('.container');
-    const sections = [
-        { el: document.querySelector('.custom-timers-section'), order: settings.customTimersOrder },
-        { el: document.querySelector('.clock-section'), order: settings.clockOrder },
-        { el: document.querySelector('.gaokao-section'), order: settings.gaokaoOrder }
-    ].sort((a, b) => a.order - b.order);
-
-    sections.forEach(s => container.appendChild(s.el));
-
-    updateFullscreenSizes();
-}
-
-function updateFullscreenSizes() {
-    document.documentElement.style.setProperty('--custom-timers-size', `${settings.customTimersSize}em`);
-    document.documentElement.style.setProperty('--special-timer-size', `${settings.specialTimerSize}em`);
-    document.documentElement.style.setProperty('--clock-size', `${settings.clockSize}em`);
-}
-
-function updateSettingsUI() {
-    document.getElementById('showCustomTimers').checked = settings.showCustomTimers;
-    document.getElementById('showClock').checked = settings.showClock;
-    document.getElementById('showGaokao').checked = settings.showGaokao;
-    document.getElementById('showLongFormat').checked = settings.showLongFormat;
-    document.getElementById('customTimersOrder').value = settings.customTimersOrder;
-    document.getElementById('clockOrder').value = settings.clockOrder;
-    document.getElementById('gaokaoOrder').value = settings.gaokaoOrder;
-    document.getElementById('customTimersSize').value = settings.customTimersSize;
-    document.getElementById('specialTimerSize').value = settings.specialTimerSize;
-    document.getElementById('clockSize').value = settings.clockSize;
-    document.querySelector('#customTimersSize + .size-value').textContent = `${settings.customTimersSize}em`;
-    document.querySelector('#specialTimerSize + .size-value').textContent = `${settings.specialTimerSize}em`;
-    document.querySelector('#clockSize + .size-value').textContent = `${settings.clockSize}em`;
-}
-
-function formatTime(totalSeconds) {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    if (settings.showLongFormat && hours > 0) {
-        return `${String(hours).padStart(2, ' ')}:${String(minutes).padStart(2, ' ')}:${String(seconds).padStart(2, '0')}`;
+function loadSchedule() {
+    const saved = localStorage.getItem('clockSchedule');
+    if (saved) {
+        try {
+            state.schedule = JSON.parse(saved);
+        } catch (e) {
+            state.schedule = JSON.parse(JSON.stringify(defaultSchedule));
+        }
     } else {
-        const totalMinutes = hours * 60 + minutes;
-        return `${String(totalMinutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        state.schedule = JSON.parse(JSON.stringify(defaultSchedule));
     }
+}
+
+function saveSchedule() {
+    localStorage.setItem('clockSchedule', JSON.stringify(state.schedule));
 }
 
 function updateCurrentTime() {
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
-
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-    const weekday = weekdays[now.getDay()];
-    document.getElementById('currentDate').textContent = `${year}年${month}月${day}日 ${weekday}`;
+    const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+    const dateStr = now.toLocaleDateString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        weekday: 'long'
+    });
+    
+    document.getElementById('currentTime').textContent = timeStr;
+    document.getElementById('currentDate').textContent = dateStr;
 }
 
 function updateGaokaoCountdown() {
+    const gaokaoDate = new Date(state.settings.gaokaoDate + 'T00:00:00');
     const now = new Date();
-    const gaokaoDate = new Date('2026-06-07T09:00:00');
     const diff = gaokaoDate - now;
-
+    
     if (diff <= 0) {
-        document.getElementById('gaokaoDays').textContent = '00';
+        document.getElementById('gaokaoDays').textContent = '000';
         document.getElementById('gaokaoHours').textContent = '00';
         document.getElementById('gaokaoMinutes').textContent = '00';
         document.getElementById('gaokaoSeconds').textContent = '00';
         return;
     }
-
+    
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    document.getElementById('gaokaoDays').textContent = String(days).padStart(2, '0');
+    
+    document.getElementById('gaokaoDays').textContent = String(days).padStart(3, '0');
     document.getElementById('gaokaoHours').textContent = String(hours).padStart(2, '0');
     document.getElementById('gaokaoMinutes').textContent = String(minutes).padStart(2, '0');
     document.getElementById('gaokaoSeconds').textContent = String(seconds).padStart(2, '0');
 }
 
-const specialTimeSlots = [
-    { start: '18:50', end: '19:20', name: '小练', duration: 30 },
-    { start: '19:20', end: '20:00', name: '自修', duration: 40 },
-    { start: '20:10', end: '20:50', name: '自修', duration: 40 },
-    { start: '20:50', end: '21:10', name: '晚读', duration: 20 },
-    { start: '21:20', end: '22:00', name: '自修', duration: 40 }
-];
-
-let specialTimerState = {
-    active: false,
-    remaining: 0,
-    paused: false,
-    currentSlot: null,
-    intervalId: null
-};
-
-function timeToMinutes(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
+function updateCountdownDisplay() {
+    const hours = Math.floor(state.timerRemaining / 3600);
+    const mins = Math.floor((state.timerRemaining % 3600) / 60);
+    const secs = state.timerRemaining % 60;
+    document.getElementById('countdownHours').textContent = String(hours).padStart(2, '0');
+    document.getElementById('countdownMinutes').textContent = String(mins).padStart(2, '0');
+    document.getElementById('countdownSeconds').textContent = String(secs).padStart(2, '0');
 }
 
-function getCurrentMinutes() {
-    const now = new Date();
-    return now.getHours() * 60 + now.getMinutes();
+function showCountdown(label, duration) {
+    const countdownSection = document.getElementById('countdownSection');
+    const timeSection = document.getElementById('timeSection');
+    
+    state.currentPeriod = null;
+    state.timerRemaining = duration;
+    countdownSection.classList.add('active');
+    document.getElementById('countdownLabel').textContent = label;
+    
+    if (!state.settings.showTimeWithCountdown) {
+        timeSection.classList.add('hidden');
+    }
+    
+    updateCountdownDisplay();
+    startTimer();
 }
 
-function checkSpecialTimer() {
-    const currentMinutes = getCurrentMinutes();
-    const currentSeconds = new Date().getSeconds();
-
-    let activeSlot = null;
-    for (const slot of specialTimeSlots) {
-        const startMinutes = timeToMinutes(slot.start);
-        const endMinutes = timeToMinutes(slot.end);
-
-        if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
-            activeSlot = slot;
-            break;
-        }
-    }
-
-    if (activeSlot) {
-        if (specialTimerState.currentSlot !== activeSlot.name) {
-            if (specialTimerState.intervalId) {
-                clearInterval(specialTimerState.intervalId);
-            }
-            specialTimerState.active = true;
-            specialTimerState.paused = false;
-            specialTimerState.currentSlot = activeSlot.name;
-            specialTimerState.remaining = activeSlot.duration * 60 - currentSeconds;
-
-            document.getElementById('specialTimerSection').style.display = 'block';
-            
-            const clockSection = document.querySelector('.clock-section');
-            clockSection.style.display = settings.showClock ? 'block' : 'none';
-            
-            startSpecialCountdown();
-        } else if (!specialTimerState.paused) {
-            const endMinutes = timeToMinutes(activeSlot.end);
-            const remainingMinutes = endMinutes - currentMinutes - 1;
-            const remainingSeconds = 60 - currentSeconds;
-            specialTimerState.remaining = remainingMinutes * 60 + remainingSeconds;
-        }
-    } else {
-        document.querySelector('.clock-section').style.display = 'block';
-        if (specialTimerState.active) {
-            specialTimerState.active = false;
-            specialTimerState.currentSlot = null;
-            if (specialTimerState.intervalId) {
-                clearInterval(specialTimerState.intervalId);
-            }
-            document.getElementById('specialTimerSection').style.display = 'none';
-        }
-    }
+function hideCountdown() {
+    const countdownSection = document.getElementById('countdownSection');
+    const timeSection = document.getElementById('timeSection');
+    
+    stopTimer();
+    countdownSection.classList.remove('active');
+    document.getElementById('countdownLabel').textContent = '';
+    timeSection.classList.remove('hidden');
+    
+    state.currentPeriod = null;
+    state.timerRemaining = 0;
 }
 
-function startSpecialCountdown() {
-    if (specialTimerState.intervalId) {
-        clearInterval(specialTimerState.intervalId);
-    }
-
-    specialTimerState.intervalId = setInterval(() => {
-        if (specialTimerState.paused) return;
-
-        if (specialTimerState.remaining <= 0) {
-            clearInterval(specialTimerState.intervalId);
-            playBeep();
-            document.getElementById('specialTimerSection').classList.add('timer-finished');
-            setTimeout(() => {
-                document.getElementById('specialTimerSection').classList.remove('timer-finished');
-            }, 3000);
-            return;
+function startTimer() {
+    if (state.timerInterval) stopTimer();
+    
+    state.isRunning = true;
+    document.getElementById('countdownBtn').classList.add('active');
+    
+    state.timerInterval = setInterval(() => {
+        state.timerRemaining--;
+        if (state.timerRemaining <= 0) {
+            stopTimer();
+            hideCountdown();
+        } else {
+            updateCountdownDisplay();
         }
-
-        specialTimerState.remaining--;
-        updateSpecialTimerDisplay();
     }, 1000);
 }
 
-function updateSpecialTimerDisplay() {
-    const timeStr = formatTime(specialTimerState.remaining);
-    const [min, sec] = timeStr.split(':').slice(-2);
-    document.getElementById('specialMinutes').textContent = min;
-    document.getElementById('specialSeconds').textContent = sec;
+function stopTimer() {
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
+    state.isRunning = false;
+    document.getElementById('countdownBtn').classList.remove('active');
 }
 
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-const fullscreenIcon = document.getElementById('fullscreenIcon');
-const exitFullscreenIcon = document.getElementById('exitFullscreenIcon');
+function toggleTimer() {
+    if (state.isRunning) {
+        stopTimer();
+    } else if (state.timerRemaining > 0) {
+        startTimer();
+    } else {
+        openModal('countdownModal');
+    }
+}
 
-function updateFullscreenUI() {
-    if (document.fullscreenElement) {
-        fullscreenIcon.style.display = 'none';
-        exitFullscreenIcon.style.display = 'block';
-        fullscreenBtn.classList.add('gray');
-        fullscreenBtn.title = '退出全屏';
+function openScheduleModal() {
+    renderScheduleList();
+    openModal('scheduleModal');
+}
+
+function resetTimer() {
+    stopTimer();
+    if (state.currentPeriod) {
+        const now = new Date();
+        const [endH, endM] = state.currentPeriod.end.split(':').map(Number);
+        const endTime = new Date();
+        endTime.setHours(endH, endM, 0, 0);
+        state.timerRemaining = Math.max(0, Math.floor((endTime - now) / 1000));
+        updateCountdownDisplay();
+        startTimer();
+    } else {
+        hideCountdown();
+    }
+}
+
+function checkSchedule() {
+    if (state.isRunning && !state.currentPeriod) return;
+    if (state.timerRemaining > 0 && state.isRunning) return;
+    
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    const period = state.schedule.find(p => {
+        if (!p.days.includes(currentDay)) return false;
+        const [startH, startM] = p.start.split(':').map(Number);
+        const [endH, endM] = p.end.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    });
+    
+    if (period && (!state.currentPeriod || state.currentPeriod.id !== period.id)) {
+        state.currentPeriod = period;
+        const now = new Date();
+        const [endH, endM] = period.end.split(':').map(Number);
+        const endTime = new Date();
+        endTime.setHours(endH, endM, 0, 0);
+        const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+        
+        if (remaining > 0) {
+            showCountdown(period.label, remaining);
+        }
+    } else if (!period && state.currentPeriod) {
+        hideCountdown();
+    }
+}
+
+function openModal(modalId) {
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+    setTimeout(() => {
+        if (!document.querySelector('.modal.active')) {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+    }, 100);
+}
+
+function initEventListeners() {
+    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+    document.getElementById('countdownBtn').addEventListener('click', toggleTimer);
+    document.getElementById('scheduleBtn').addEventListener('click', openScheduleModal);
+    document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
+    document.getElementById('personalizeBtn').addEventListener('click', () => openModal('personalizeModal'));
+    
+    document.getElementById('closeCountdownModal').addEventListener('click', () => closeModal('countdownModal'));
+    document.getElementById('closeScheduleModal').addEventListener('click', () => closeModal('scheduleModal'));
+    document.getElementById('closeScheduleEditModal').addEventListener('click', () => closeModal('scheduleEditModal'));
+    document.getElementById('closeSettingsModal').addEventListener('click', () => closeModal('settingsModal'));
+    document.getElementById('closePersonalizeModal').addEventListener('click', () => closeModal('personalizeModal'));
+    
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'modalOverlay') {
+            document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+            setTimeout(() => {
+                document.getElementById('modalOverlay').classList.remove('active');
+            }, 100);
+        }
+    });
+    
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const minutes = parseInt(btn.dataset.minutes);
+            showCountdown('手动倒计时', minutes * 60);
+            closeModal('countdownModal');
+        });
+    });
+    
+    document.getElementById('startCustomTimer').addEventListener('click', () => {
+        const minutes = parseInt(document.getElementById('customMinutes').value);
+        if (minutes && minutes > 0) {
+            showCountdown('手动倒计时', minutes * 60);
+            closeModal('countdownModal');
+            document.getElementById('customMinutes').value = '';
+        }
+    });
+    
+    document.getElementById('addScheduleBtn').addEventListener('click', () => {
+        closeModal('scheduleModal');
+        openScheduleEditModal(null);
+    });
+    
+    document.getElementById('saveScheduleBtn').addEventListener('click', saveScheduleEdit);
+    
+    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+        state.settings.gaokaoDate = document.getElementById('gaokaoDate').value;
+        state.settings.showTimeWithCountdown = document.getElementById('showTimeWithCountdown').checked;
+        saveSettings();
+        updateGaokaoCountdown();
+        closeModal('settingsModal');
+    });
+    
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            applyTheme(theme);
+            state.settings.currentTheme = theme;
+            saveSettings();
+        });
+    });
+    
+    document.getElementById('advancedModeToggle').addEventListener('change', (e) => {
+        const panel = document.getElementById('advancedPanel');
+        panel.style.display = e.target.checked ? 'block' : 'none';
+        if (e.target.checked) {
+            updateElementSelector();
+        }
+    });
+    
+    document.getElementById('elementSelector').addEventListener('change', updateCssEditor);
+    document.getElementById('applyCssBtn').addEventListener('click', applyCustomCss);
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        if (e.key === 'F11') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    });
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
         document.body.classList.add('fullscreen-mode');
     } else {
-        fullscreenIcon.style.display = 'block';
-        exitFullscreenIcon.style.display = 'none';
-        fullscreenBtn.classList.remove('gray');
-        fullscreenBtn.title = '全屏';
+        document.exitFullscreen();
         document.body.classList.remove('fullscreen-mode');
     }
 }
 
-fullscreenBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.error('全屏请求失败:', err);
-        });
-    } else {
-        document.exitFullscreen();
-    }
-});
-
-document.addEventListener('fullscreenchange', updateFullscreenUI);
-updateFullscreenUI();
-
-const timerControlBtn = document.getElementById('timerControlBtn');
-const timerPopup = document.getElementById('timerPopup');
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsPopup = document.getElementById('settingsPopup');
-
-function updateTimerControlVisibility() {
-    if (document.fullscreenElement) {
-        timerControlBtn.style.display = 'none';
-        timerPopup.classList.remove('show');
-    } else {
-        timerControlBtn.style.display = 'flex';
-    }
-    settingsBtn.style.display = 'flex';
-}
-
-document.addEventListener('fullscreenchange', () => {
-    updateFullscreenUI();
-    updateTimerControlVisibility();
-});
-updateTimerControlVisibility();
-
-timerControlBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    settingsPopup.classList.remove('show');
-    timerPopup.classList.toggle('show');
-});
-
-settingsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    timerPopup.classList.remove('show');
-    settingsPopup.classList.toggle('show');
-});
-
-document.addEventListener('click', (e) => {
-    if (!timerPopup.contains(e.target) && e.target !== timerControlBtn) {
-        timerPopup.classList.remove('show');
-    }
-    if (!settingsPopup.contains(e.target) && e.target !== settingsBtn) {
-        settingsPopup.classList.remove('show');
-    }
-});
-
-document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const minutes = parseInt(btn.dataset.minutes);
-        addQuickTimer(minutes);
-        timerPopup.classList.remove('show');
+function applyTheme(theme) {
+    document.body.classList.remove('theme-cyberpunk', 'theme-ink', 'theme-mahiro');
+    
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === theme);
     });
-});
-
-document.getElementById('customTimerBtn').addEventListener('click', () => {
-    const input = document.getElementById('customMinutes');
-    const minutes = parseInt(input.value);
-    if (minutes && minutes > 0) {
-        addQuickTimer(minutes);
-        input.value = '';
-        timerPopup.classList.remove('show');
+    
+    if (theme !== 'vscode') {
+        document.body.classList.add('theme-' + theme);
     }
-});
-
-function addQuickTimer(minutes) {
-    const names = {
-        150: '150分钟',
-        120: '120分钟',
-        75: '75分钟',
-        45: '45分钟',
-        30: '30分钟'
-    };
-    const name = names[minutes] || `${minutes}分钟`;
-
-    const timer = {
-        id: ++customTimerId,
-        name: name,
-        totalSeconds: minutes * 60,
-        remaining: minutes * 60,
-        running: false,
-        intervalId: null
-    };
-
-    customTimers.push(timer);
-    saveCustomTimers();
-    renderCustomTimers();
-}
-
-let customTimers = [];
-let customTimerId = 0;
-
-function loadCustomTimers() {
-    const saved = localStorage.getItem('customTimers');
-    if (saved) {
-        customTimers = JSON.parse(saved);
-        renderCustomTimers();
-    }
-}
-
-function saveCustomTimers() {
-    localStorage.setItem('customTimers', JSON.stringify(customTimers));
-}
-
-function renderCustomTimers() {
-    const container = document.getElementById('customTimersList');
-    const section = document.querySelector('.custom-timers-section');
-    container.innerHTML = '';
-
-    if (customTimers.length === 0) {
-        section.classList.add('empty');
+    
+    if (theme === 'cyberpunk') {
+        document.documentElement.style.setProperty('--font-size-countdown', '10em');
+    } else if (theme === 'ink') {
+        document.documentElement.style.setProperty('--font-size-countdown', '9em');
+    } else if (theme === 'mahiro') {
+        document.documentElement.style.setProperty('--font-size-countdown', '9em');
     } else {
-        section.classList.remove('empty');
+        document.documentElement.style.removeProperty('--font-size-countdown');
     }
+}
 
-    customTimers.forEach(timer => {
-        const timerElement = document.createElement('div');
-        timerElement.className = 'custom-timer-item';
-        if (timer.remaining === 0 && timer.totalSeconds > 0) {
-            timerElement.classList.add('timer-finished');
+function updateElementSelector() {
+    const selector = document.getElementById('elementSelector');
+    const elements = [
+        { value: '#currentTime', label: '当前时间' },
+        { value: '#currentDate', label: '当前日期' },
+        { value: '#countdownTime', label: '倒计时时间' },
+        { value: '#countdownLabel', label: '倒计时标签' },
+        { value: '#gaokaoSection', label: '高考倒计时区域' },
+        { value: '.app-container', label: '整个页面' }
+    ];
+    
+    selector.innerHTML = elements.map(e => `<option value="${e.value}">${e.label}</option>`).join('');
+}
+
+function updateCssEditor() {
+    const selector = document.getElementById('elementSelector').value;
+    const editor = document.getElementById('cssEditor');
+    
+    if (state.settings.customCss[selector]) {
+        editor.value = state.settings.customCss[selector];
+    } else {
+        editor.value = '';
+    }
+}
+
+function applyCustomCss() {
+    const selector = document.getElementById('elementSelector').value;
+    const cssText = document.getElementById('cssEditor').value;
+    
+    state.settings.customCss[selector] = cssText;
+    saveSettings();
+    
+    let styleEl = document.getElementById('custom-style');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'custom-style';
+        document.head.appendChild(styleEl);
+    }
+    
+    let allCss = '';
+    for (const [sel, css] of Object.entries(state.settings.customCss)) {
+        if (css.trim()) {
+            allCss += `${selector === sel ? sel : sel} { ${css} }\n`;
         }
+    }
+    styleEl.textContent = allCss;
+}
 
-        const timeDisplay = formatTime(timer.remaining);
+function openScheduleEditModal(periodId) {
+    const modal = document.getElementById('scheduleEditModal');
+    let period = null;
+    
+    if (periodId) {
+        period = state.schedule.find(p => p.id === periodId);
+    }
+    
+    document.getElementById('editScheduleLabel').value = period ? period.label : '';
+    document.getElementById('editScheduleStart').value = period ? period.start : '18:00';
+    document.getElementById('editScheduleEnd').value = period ? period.end : '18:30';
+    
+    const daysContainer = document.getElementById('editScheduleDays');
+    daysContainer.innerHTML = '';
+    
+    const selectedDays = period ? period.days : [1, 2, 3, 4, 5];
+    
+    dayNames.forEach((name, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'day-btn' + (selectedDays.includes(index) ? ' active' : '');
+        btn.textContent = name;
+        btn.dataset.day = index;
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+        });
+        daysContainer.appendChild(btn);
+    });
+    
+    modal.dataset.periodId = periodId || '';
+    openModal('scheduleEditModal');
+}
 
-        timerElement.innerHTML = `
-            <div class="custom-timer-info">
-                <div class="custom-timer-name">${timer.name}</div>
-                <div class="custom-timer-time">${timeDisplay}</div>
-            </div>
-            <div class="custom-timer-controls">
-                <button class="toggle-btn" data-id="${timer.id}">
-                    ${timer.running ? '暂停' : '开始'}
-                </button>
-                <button class="reset-btn" data-id="${timer.id}">重置</button>
-                <button class="delete-btn" data-id="${timer.id}">删除</button>
+function saveScheduleEdit() {
+    const modal = document.getElementById('scheduleEditModal');
+    const periodId = modal.dataset.periodId;
+    
+    const label = document.getElementById('editScheduleLabel').value.trim() || '未命名';
+    const start = document.getElementById('editScheduleStart').value;
+    const end = document.getElementById('editScheduleEnd').value;
+    
+    const selectedDays = [];
+    document.querySelectorAll('#editScheduleDays .day-btn').forEach(btn => {
+        if (btn.classList.contains('active')) {
+            selectedDays.push(parseInt(btn.dataset.day));
+        }
+    });
+    
+    if (!start || !end) {
+        alert('请填写开始和结束时间');
+        return;
+    }
+    
+    if (periodId) {
+        const period = state.schedule.find(p => p.id === parseInt(periodId));
+        if (period) {
+            period.label = label;
+            period.days = selectedDays;
+            period.start = start;
+            period.end = end;
+        }
+    } else {
+        const newId = state.schedule.length > 0 ? Math.max(...state.schedule.map(p => p.id)) + 1 : 1;
+        state.schedule.push({
+            id: newId,
+            label,
+            days: selectedDays,
+            start,
+            end
+        });
+    }
+    
+    saveSchedule();
+    closeModal('scheduleEditModal');
+    renderScheduleList();
+}
+
+function renderScheduleList() {
+    const list = document.getElementById('scheduleList');
+    
+    if (state.schedule.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">暂无课表</div>';
+        return;
+    }
+    
+    list.innerHTML = state.schedule.map(period => {
+        const daysText = period.days.map(d => dayNames[d]).join('、');
+        return `
+            <div class="schedule-item" data-id="${period.id}">
+                <div class="schedule-info">
+                    <div class="schedule-label">${period.label}</div>
+                    <div class="schedule-time">${period.start} - ${period.end}</div>
+                    <div class="schedule-days">${daysText}</div>
+                </div>
+                <div class="schedule-actions">
+                    <button class="schedule-action-btn edit" data-id="${period.id}" title="编辑">✎</button>
+                    <button class="schedule-action-btn delete" data-id="${period.id}" title="删除">×</button>
+                </div>
             </div>
         `;
-
-        container.appendChild(timerElement);
-    });
-
-    document.querySelectorAll('.toggle-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = parseInt(e.target.dataset.id);
-            toggleCustomTimer(id);
-        });
-    });
-
-    document.querySelectorAll('.reset-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = parseInt(e.target.dataset.id);
-            resetCustomTimer(id);
-        });
-    });
-
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = parseInt(e.target.dataset.id);
-            deleteCustomTimer(id);
-        });
-    });
-}
-
-function toggleCustomTimer(id) {
-    const timer = customTimers.find(t => t.id === id);
-    if (!timer || timer.remaining === 0) return;
-
-    if (timer.running) {
-        timer.running = false;
-        if (timer.intervalId) {
-            clearInterval(timer.intervalId);
-        }
-    } else {
-        timer.running = true;
-        timer.intervalId = setInterval(() => {
-            if (timer.remaining <= 0) {
-                clearInterval(timer.intervalId);
-                timer.running = false;
-                playBeep();
-                renderCustomTimers();
-                return;
-            }
-            timer.remaining--;
-            renderCustomTimers();
-        }, 1000);
-    }
-
-    saveCustomTimers();
-    renderCustomTimers();
-}
-
-function resetCustomTimer(id) {
-    const timer = customTimers.find(t => t.id === id);
-    if (!timer) return;
-
-    if (timer.intervalId) {
-        clearInterval(timer.intervalId);
-    }
-    timer.remaining = timer.totalSeconds;
-    timer.running = false;
-    timer.intervalId = null;
-
-    saveCustomTimers();
-    renderCustomTimers();
-}
-
-function deleteCustomTimer(id) {
-    const timerIndex = customTimers.findIndex(t => t.id === id);
-    if (timerIndex === -1) return;
-
-    const timer = customTimers[timerIndex];
-    if (timer.intervalId) {
-        clearInterval(timer.intervalId);
-    }
-
-    customTimers.splice(timerIndex, 1);
-    saveCustomTimers();
-    renderCustomTimers();
-}
-
-function playBeep() {
-    try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.value = 800;
-        oscillator.type = 'sine';
-
-        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.5);
-
-        setTimeout(() => {
-            const osc2 = audioContext.createOscillator();
-            const gain2 = audioContext.createGain();
-            osc2.connect(gain2);
-            gain2.connect(audioContext.destination);
-            osc2.frequency.value = 800;
-            osc2.type = 'sine';
-            gain2.gain.setValueAtTime(0.5, audioContext.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            osc2.start(audioContext.currentTime);
-            osc2.stop(audioContext.currentTime + 0.5);
-        }, 600);
-
-        setTimeout(() => {
-            const osc3 = audioContext.createOscillator();
-            const gain3 = audioContext.createGain();
-            osc3.connect(gain3);
-            gain3.connect(audioContext.destination);
-            osc3.frequency.value = 800;
-            osc3.type = 'sine';
-            gain3.gain.setValueAtTime(0.5, audioContext.currentTime);
-            gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            osc3.start(audioContext.currentTime);
-            osc3.stop(audioContext.currentTime + 0.5);
-        }, 1200);
-    } catch (e) {
-        console.error('播放提示音失败:', e);
-    }
-}
-
-document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const theme = btn.dataset.theme;
-        applyTheme(theme);
-    });
-});
-
-function applyTheme(theme) {
-    document.body.classList.remove('theme-dark', 'theme-neon', 'theme-ocean', 'theme-forest', 'theme-custom');
+    }).join('');
     
-    if (theme !== 'default') {
-        document.body.classList.add(`theme-${theme}`);
-    }
-
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.remove('active');
+    list.querySelectorAll('.schedule-action-btn.edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = parseInt(e.currentTarget.dataset.id);
+            closeModal('scheduleModal');
+            openScheduleEditModal(id);
+        });
     });
-    document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
-
-    localStorage.setItem('timerTheme', theme);
-}
-
-function applyCustomTheme() {
-    const bgColor = document.getElementById('bgColor').value;
-    const textColor = document.getElementById('textColor').value;
-    const accentColor = document.getElementById('accentColor').value;
-
-    document.body.style.setProperty('--bg-primary', bgColor);
-    document.body.style.setProperty('--bg-secondary', adjustColor(bgColor, 15));
-    document.body.style.setProperty('--bg-tertiary', adjustColor(bgColor, 25));
-    document.body.style.setProperty('--bg-hover', adjustColor(bgColor, 35));
-    document.body.style.setProperty('--text-primary', textColor);
-    document.body.style.setProperty('--text-secondary', adjustColor(textColor, -30));
-    document.body.style.setProperty('--accent-blue', accentColor);
-    document.body.style.setProperty('--accent-green', adjustColor(accentColor, -20));
-    document.body.style.setProperty('--accent-orange', '#ffab91');
-    document.body.style.setProperty('--accent-yellow', '#fff59d');
-    document.body.style.setProperty('--border-color', adjustColor(accentColor, -30));
-
-    document.body.classList.remove('theme-dark', 'theme-neon', 'theme-ocean', 'theme-forest');
-    document.body.classList.add('theme-custom');
-
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.remove('active');
+    
+    list.querySelectorAll('.schedule-action-btn.delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = parseInt(e.currentTarget.dataset.id);
+            state.schedule = state.schedule.filter(p => p.id !== id);
+            saveSchedule();
+            renderScheduleList();
+        });
     });
-
-    localStorage.setItem('timerTheme', 'custom');
-    localStorage.setItem('customTheme', JSON.stringify({ bgColor, textColor, accentColor }));
 }
 
-document.getElementById('bgColor').addEventListener('input', applyCustomTheme);
-document.getElementById('textColor').addEventListener('input', applyCustomTheme);
-document.getElementById('accentColor').addEventListener('input', applyCustomTheme);
-
-function resetTheme() {
-    document.body.classList.remove('theme-dark', 'theme-neon', 'theme-ocean', 'theme-forest', 'theme-custom');
-    document.body.removeAttribute('style');
-
-    document.getElementById('bgColor').value = '#1e1e1e';
-    document.getElementById('textColor').value = '#cccccc';
-    document.getElementById('accentColor').value = '#4fc1ff';
-
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector('[data-theme="default"]').classList.add('active');
-
-    localStorage.removeItem('timerTheme');
-    localStorage.removeItem('customTheme');
-}
-
-function adjustColor(hex, amount) {
-    const num = parseInt(hex.replace('#', ''), 16);
-    const r = Math.min(255, Math.max(0, (num >> 16) + amount));
-    const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
-    const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-}
-
-function loadTheme() {
-    const savedTheme = localStorage.getItem('timerTheme');
-    if (savedTheme) {
-        if (savedTheme === 'custom') {
-            const customTheme = localStorage.getItem('customTheme');
-            if (customTheme) {
-                const { bgColor, textColor, accentColor } = JSON.parse(customTheme);
-                document.getElementById('bgColor').value = bgColor;
-                document.getElementById('textColor').value = textColor;
-                document.getElementById('accentColor').value = accentColor;
-                
-                document.body.style.setProperty('--bg-primary', bgColor);
-                document.body.style.setProperty('--bg-secondary', adjustColor(bgColor, 15));
-                document.body.style.setProperty('--bg-tertiary', adjustColor(bgColor, 25));
-                document.body.style.setProperty('--bg-hover', adjustColor(bgColor, 35));
-                document.body.style.setProperty('--text-primary', textColor);
-                document.body.style.setProperty('--text-secondary', adjustColor(textColor, -30));
-                document.body.style.setProperty('--accent-blue', accentColor);
-                document.body.style.setProperty('--accent-green', adjustColor(accentColor, -20));
-                document.body.style.setProperty('--accent-orange', '#ffab91');
-                document.body.style.setProperty('--accent-yellow', '#fff59d');
-                document.body.style.setProperty('--border-color', adjustColor(accentColor, -30));
-                
-                document.body.classList.add('theme-custom');
-            }
-        } else {
-            applyTheme(savedTheme);
-        }
-    }
-}
-
-document.querySelectorAll('.size-slider').forEach(slider => {
-    slider.addEventListener('input', (e) => {
-        const value = e.target.value;
-        e.target.nextElementSibling.textContent = `${value}em`;
-        
-        if (e.target.id === 'customTimersSize') {
-            settings.customTimersSize = parseFloat(value);
-        } else if (e.target.id === 'specialTimerSize') {
-            settings.specialTimerSize = parseFloat(value);
-        } else if (e.target.id === 'clockSize') {
-            settings.clockSize = parseFloat(value);
-        }
-        updateFullscreenSizes();
-        saveSettings();
-    });
-});
-
-function applyDisplaySettings() {
-    settings.showCustomTimers = document.getElementById('showCustomTimers').checked;
-    settings.showClock = document.getElementById('showClock').checked;
-    settings.showGaokao = document.getElementById('showGaokao').checked;
-    settings.showLongFormat = document.getElementById('showLongFormat').checked;
-    settings.customTimersOrder = parseInt(document.getElementById('customTimersOrder').value);
-    settings.clockOrder = parseInt(document.getElementById('clockOrder').value);
-    settings.gaokaoOrder = parseInt(document.getElementById('gaokaoOrder').value);
-
-    saveSettings();
-    applySettings();
-}
-
-document.getElementById('showCustomTimers').addEventListener('change', applyDisplaySettings);
-document.getElementById('showGaokao').addEventListener('change', applyDisplaySettings);
-document.getElementById('showClock').addEventListener('change', applyDisplaySettings);
-document.getElementById('showLongFormat').addEventListener('change', applyDisplaySettings);
-document.getElementById('customTimersOrder').addEventListener('change', applyDisplaySettings);
-document.getElementById('clockOrder').addEventListener('change', applyDisplaySettings);
-document.getElementById('gaokaoOrder').addEventListener('change', applyDisplaySettings);
-
-function resetAllSettings() {
-    settings = { ...defaultSettings };
-    saveSettings();
-    applySettings();
-    updateSettingsUI();
-}
-
-function updateAll() {
-    updateCurrentTime();
-    updateGaokaoCountdown();
-    checkSpecialTimer();
-}
-
-updateAll();
-setInterval(updateAll, 1000);
-loadSettings();
-loadTheme();
-loadCustomTimers();
-
-document.getElementById('resetAllBtn').addEventListener('click', () => {
-    resetAllSettings();
-    resetTheme();
-});
+document.addEventListener('DOMContentLoaded', init);

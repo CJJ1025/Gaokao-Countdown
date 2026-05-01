@@ -3,179 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>计时器</title>
+    <title>班级时钟</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-
-        <div class="special-timer-section" id="specialTimerSection" style="display: none;">
-            <div class="special-countdown">
-                <span id="specialMinutes">00</span>:<span id="specialSeconds">00</span>
+    <div class="app-container" id="appContainer">
+        <main class="main-display" id="mainDisplay">
+            <div class="time-section" id="timeSection">
+                <div class="current-time" id="currentTime">00:00:00</div>
+                <div class="current-date" id="currentDate">0000年00月00日</div>
             </div>
-        </div>
-
-        <div class="clock-section">
-            <div class="current-time" id="currentTime">00:00:00</div>
-            <div class="current-date" id="currentDate">0000年00月00日</div>
-        </div>
-
-        <div class="gaokao-section">
-            <div class="gaokao-countdown" id="gaokaoCountdown">
-                <span class="gaokao-label">距离高考</span>
-                <span id="gaokaoDays">00</span>天
-                <span id="gaokaoHours">00</span>时
-                <span id="gaokaoMinutes">00</span>分
-                <span id="gaokaoSeconds">00</span>秒
+            
+            <div class="countdown-section" id="countdownSection">
+                <div class="countdown-time" id="countdownTime">
+                    <span id="countdownHours">00</span>:<span id="countdownMinutes">00</span>:<span id="countdownSeconds">00</span>
+                </div>
+                <div class="countdown-label" id="countdownLabel"></div>
             </div>
-        </div>
-
-        <div class="custom-timers-section">
-            <div class="custom-timers-list" id="customTimersList"></div>
-        </div>
-    </div>
-
-    <button id="settingsBtn" class="control-btn" title="设置">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-            <circle cx="12" cy="12" r="3"/>
-        </svg>
-    </button>
-
-    <button id="timerControlBtn" class="control-btn" title="计时器">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-    </button>
-
-    <button id="fullscreenBtn" class="control-btn" title="全屏">
-        <svg id="fullscreenIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
-        <svg id="exitFullscreenIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-        </svg>
-    </button>
-
-    <div id="settingsPopup" class="popup settings-popup">
-        <div class="popup-title">主题设置</div>
-        <div class="theme-options">
-            <button class="theme-btn active" data-theme="default">默认</button>
-            <button class="theme-btn" data-theme="dark">深色</button>
-            <button class="theme-btn" data-theme="neon">霓虹</button>
-            <button class="theme-btn" data-theme="ocean">海洋</button>
-            <button class="theme-btn" data-theme="forest">森林</button>
-        </div>
-        <div class="custom-theme">
-            <label>自定义颜色</label>
-            <div class="color-pickers">
-                <div class="color-picker">
-                    <span>背景色</span>
-                    <input type="color" id="bgColor" value="#1e1e1e">
-                </div>
-                <div class="color-picker">
-                    <span>文字色</span>
-                    <input type="color" id="textColor" value="#cccccc">
-                </div>
-                <div class="color-picker">
-                    <span>强调色</span>
-                    <input type="color" id="accentColor" value="#4fc1ff">
+            
+            <div class="gaokao-section" id="gaokaoSection">
+                <div class="gaokao-title">距离2026年高考</div>
+                <div class="gaokao-countdown" id="gaokaoCountdown">
+                    <span id="gaokaoDays">000</span>天
+                    <span id="gaokaoHours">00</span>时
+                    <span id="gaokaoMinutes">00</span>分
+                    <span id="gaokaoSeconds">00</span>秒
                 </div>
             </div>
-        </div>
-
-        <div class="settings-divider"></div>
-        <div class="popup-title">显示设置</div>
+        </main>
         
-        <div class="setting-group">
-            <label class="setting-label">
-                <input type="checkbox" id="showCustomTimers" checked>
-                <span>显示自定义倒计时</span>
-            </label>
-            <label class="setting-label">
-                <input type="checkbox" id="showGaokao" checked>
-                <span>显示高考倒计时</span>
-            </label>
-            <label class="setting-label">
-                <input type="checkbox" id="showClock">
-                <span>特殊时段显示当前时间</span>
-            </label>
-            <label class="setting-label">
-                <input type="checkbox" id="showLongFormat" checked>
-                <span>超过2小时显示hh:mm:ss</span>
-            </label>
+        <div class="control-bar" id="controlBar">
+            <button class="control-btn" id="personalizeBtn" title="个性化">✨</button>
+            <button class="control-btn" id="scheduleBtn" title="课表">📅</button>
+            <button class="control-btn" id="settingsBtn" title="设置">⚙️</button>
+            <button class="control-btn" id="countdownBtn" title="倒计时">⏱️</button>
+            <button class="control-btn" id="fullscreenBtn" title="全屏">⛶</button>
         </div>
+    </div>
 
-        <div class="setting-group">
-            <label class="setting-label">显示顺序</label>
-            <div class="order-controls">
-                <div class="order-item">
-                    <span>自定义倒计时</span>
-                    <select id="customTimersOrder" class="order-select">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="countdownModal">
+            <div class="modal-header">
+                <h3>添加倒计时</h3>
+                <button class="modal-close" id="closeCountdownModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="timer-presets">
+                    <button class="preset-btn" data-minutes="150">2小时30分</button>
+                    <button class="preset-btn" data-minutes="120">2小时</button>
+                    <button class="preset-btn" data-minutes="75">1小时15分</button>
+                    <button class="preset-btn" data-minutes="40">40分钟</button>
                 </div>
-                <div class="order-item">
-                    <span>当前时间</span>
-                    <select id="clockOrder" class="order-select">
-                        <option value="1">1</option>
-                        <option value="2" selected>2</option>
-                        <option value="3">3</option>
-                    </select>
-                </div>
-                <div class="order-item">
-                    <span>高考倒计时</span>
-                    <select id="gaokaoOrder" class="order-select">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3" selected>3</option>
-                    </select>
+                <div class="custom-input">
+                    <input type="number" id="customMinutes" placeholder="自定义分钟数" min="1" max="999">
+                    <button class="modal-btn" id="startCustomTimer">开始</button>
                 </div>
             </div>
         </div>
-
-        <div class="settings-divider"></div>
-        <div class="popup-title">全屏设置</div>
         
-        <div class="setting-group">
-            <label class="setting-label">自定义倒计时字体大小</label>
-            <input type="range" id="customTimersSize" min="3" max="10" value="4.5" step="0.5" class="size-slider">
-            <span class="size-value">4.5em</span>
+        <div class="modal" id="scheduleModal">
+            <div class="modal-header">
+                <h3>课表设置</h3>
+                <button class="modal-close" id="closeScheduleModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="schedule-list" id="scheduleList"></div>
+                <button class="modal-btn full-width" id="addScheduleBtn">+ 添加时段</button>
+            </div>
         </div>
-
-        <div class="setting-group">
-            <label class="setting-label">特殊倒计时字体大小</label>
-            <input type="range" id="specialTimerSize" min="8" max="16" value="12" step="1" class="size-slider">
-            <span class="size-value">12em</span>
+        
+        <div class="modal" id="scheduleEditModal">
+            <div class="modal-header">
+                <h3>编辑时段</h3>
+                <button class="modal-close" id="closeScheduleEditModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>标签</label>
+                    <input type="text" id="editScheduleLabel" placeholder="如：自修时间">
+                </div>
+                <div class="form-group">
+                    <label>星期</label>
+                    <div class="day-selector" id="editScheduleDays"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>开始时间</label>
+                        <input type="time" id="editScheduleStart">
+                    </div>
+                    <div class="form-group">
+                        <label>结束时间</label>
+                        <input type="time" id="editScheduleEnd">
+                    </div>
+                </div>
+                <button class="modal-btn full-width" id="saveScheduleBtn">保存</button>
+            </div>
         </div>
-
-        <div class="setting-group">
-            <label class="setting-label">当前时间字体大小</label>
-            <input type="range" id="clockSize" min="3" max="10" value="5" step="0.5" class="size-slider">
-            <span class="size-value">5em</span>
+        
+        <div class="modal" id="settingsModal">
+            <div class="modal-header">
+                <h3>设置</h3>
+                <button class="modal-close" id="closeSettingsModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showTimeWithCountdown">
+                        倒计时时同时显示当前时间
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>高考日期</label>
+                    <input type="date" id="gaokaoDate" value="2026-06-07">
+                </div>
+                <button class="modal-btn full-width" id="saveSettingsBtn">保存设置</button>
+            </div>
         </div>
-
-        <button id="resetAllBtn" class="popup-btn secondary">重置所有设置</button>
+        
+        <div class="modal" id="personalizeModal">
+            <div class="modal-header">
+                <h3>个性化</h3>
+                <button class="modal-close" id="closePersonalizeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="theme-presets">
+                    <div class="section-title">预设主题</div>
+                    <div class="theme-grid">
+                        <button class="theme-btn" data-theme="vscode">
+                            <span class="theme-preview vscode"></span>
+                            <span>VS Code</span>
+                        </button>
+                        <button class="theme-btn" data-theme="cyberpunk">
+                            <span class="theme-preview cyberpunk"></span>
+                            <span>赛博朋克</span>
+                        </button>
+                        <button class="theme-btn" data-theme="ink">
+                            <span class="theme-preview ink"></span>
+                            <span>水墨古风</span>
+                        </button>
+                        <button class="theme-btn" data-theme="mahiro">
+                            <span class="theme-preview mahiro"></span>
+                            <span>绪山真寻</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="advanced-edit">
+                    <div class="section-title">
+                        <label><input type="checkbox" id="advancedModeToggle"> 高级编辑模式</label>
+                    </div>
+                    <div class="advanced-panel" id="advancedPanel" style="display:none;">
+                        <div class="element-selector">
+                            <label>选择元素</label>
+                            <select id="elementSelector"></select>
+                        </div>
+                        <div class="css-editor">
+                            <label>CSS属性</label>
+                            <textarea id="cssEditor" placeholder="color: #fff;&#10;font-size: 2em;&#10;"></textarea>
+                        </div>
+                        <button class="modal-btn" id="applyCssBtn">应用样式</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div id="timerPopup" class="popup timer-popup">
-        <div class="popup-title">选择倒计时</div>
-        <div class="popup-options">
-            <button class="preset-btn" data-minutes="150">150分钟</button>
-            <button class="preset-btn" data-minutes="120">120分钟</button>
-            <button class="preset-btn" data-minutes="75">75分钟</button>
-            <button class="preset-btn" data-minutes="45">45分钟</button>
-            <button class="preset-btn" data-minutes="30">30分钟</button>
-        </div>
-        <div class="popup-custom">
-            <input type="number" id="customMinutes" class="popup-input" placeholder="自定义" min="1" max="999">
-            <button id="customTimerBtn" class="popup-btn">确定</button>
-        </div>
-    </div>
-
+    
     <script src="script.js"></script>
 </body>
 </html>
