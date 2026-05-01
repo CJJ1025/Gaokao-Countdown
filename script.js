@@ -1,6 +1,6 @@
 const defaultSettings = {
     showCustomTimers: true,
-    showClock: true,
+    showClock: false,
     showGaokao: true,
     showLongFormat: true,
     customTimersOrder: 1,
@@ -169,6 +169,10 @@ function checkSpecialTimer() {
             specialTimerState.remaining = activeSlot.duration * 60 - currentSeconds;
 
             document.getElementById('specialTimerSection').style.display = 'block';
+            
+            const clockSection = document.querySelector('.clock-section');
+            clockSection.style.display = settings.showClock ? 'block' : 'none';
+            
             startSpecialCountdown();
         } else if (!specialTimerState.paused) {
             const endMinutes = timeToMinutes(activeSlot.end);
@@ -177,6 +181,7 @@ function checkSpecialTimer() {
             specialTimerState.remaining = remainingMinutes * 60 + remainingSeconds;
         }
     } else {
+        document.querySelector('.clock-section').style.display = 'block';
         if (specialTimerState.active) {
             specialTimerState.active = false;
             specialTimerState.currentSlot = null;
@@ -259,13 +264,11 @@ const settingsPopup = document.getElementById('settingsPopup');
 function updateTimerControlVisibility() {
     if (document.fullscreenElement) {
         timerControlBtn.style.display = 'none';
-        settingsBtn.style.display = 'none';
         timerPopup.classList.remove('show');
-        settingsPopup.classList.remove('show');
     } else {
         timerControlBtn.style.display = 'flex';
-        settingsBtn.style.display = 'flex';
     }
+    settingsBtn.style.display = 'flex';
 }
 
 document.addEventListener('fullscreenchange', () => {
@@ -538,7 +541,7 @@ function applyTheme(theme) {
     localStorage.setItem('timerTheme', theme);
 }
 
-document.getElementById('applyCustomBtn').addEventListener('click', () => {
+function applyCustomTheme() {
     const bgColor = document.getElementById('bgColor').value;
     const textColor = document.getElementById('textColor').value;
     const accentColor = document.getElementById('accentColor').value;
@@ -564,11 +567,13 @@ document.getElementById('applyCustomBtn').addEventListener('click', () => {
 
     localStorage.setItem('timerTheme', 'custom');
     localStorage.setItem('customTheme', JSON.stringify({ bgColor, textColor, accentColor }));
+}
 
-    settingsPopup.classList.remove('show');
-});
+document.getElementById('bgColor').addEventListener('input', applyCustomTheme);
+document.getElementById('textColor').addEventListener('input', applyCustomTheme);
+document.getElementById('accentColor').addEventListener('input', applyCustomTheme);
 
-document.getElementById('resetThemeBtn').addEventListener('click', () => {
+function resetTheme() {
     document.body.classList.remove('theme-dark', 'theme-neon', 'theme-ocean', 'theme-forest', 'theme-custom');
     document.body.removeAttribute('style');
 
@@ -583,9 +588,7 @@ document.getElementById('resetThemeBtn').addEventListener('click', () => {
 
     localStorage.removeItem('timerTheme');
     localStorage.removeItem('customTheme');
-
-    settingsPopup.classList.remove('show');
-});
+}
 
 function adjustColor(hex, amount) {
     const num = parseInt(hex.replace('#', ''), 16);
@@ -630,10 +633,20 @@ document.querySelectorAll('.size-slider').forEach(slider => {
     slider.addEventListener('input', (e) => {
         const value = e.target.value;
         e.target.nextElementSibling.textContent = `${value}em`;
+        
+        if (e.target.id === 'customTimersSize') {
+            settings.customTimersSize = parseFloat(value);
+        } else if (e.target.id === 'specialTimerSize') {
+            settings.specialTimerSize = parseFloat(value);
+        } else if (e.target.id === 'clockSize') {
+            settings.clockSize = parseFloat(value);
+        }
+        updateFullscreenSizes();
+        saveSettings();
     });
 });
 
-document.getElementById('applySettingsBtn').addEventListener('click', () => {
+function applyDisplaySettings() {
     settings.showCustomTimers = document.getElementById('showCustomTimers').checked;
     settings.showClock = document.getElementById('showClock').checked;
     settings.showGaokao = document.getElementById('showGaokao').checked;
@@ -641,22 +654,25 @@ document.getElementById('applySettingsBtn').addEventListener('click', () => {
     settings.customTimersOrder = parseInt(document.getElementById('customTimersOrder').value);
     settings.clockOrder = parseInt(document.getElementById('clockOrder').value);
     settings.gaokaoOrder = parseInt(document.getElementById('gaokaoOrder').value);
-    settings.customTimersSize = parseFloat(document.getElementById('customTimersSize').value);
-    settings.specialTimerSize = parseFloat(document.getElementById('specialTimerSize').value);
-    settings.clockSize = parseFloat(document.getElementById('clockSize').value);
 
     saveSettings();
     applySettings();
-    settingsPopup.classList.remove('show');
-});
+}
 
-document.getElementById('resetSettingsBtn').addEventListener('click', () => {
+document.getElementById('showCustomTimers').addEventListener('change', applyDisplaySettings);
+document.getElementById('showGaokao').addEventListener('change', applyDisplaySettings);
+document.getElementById('showClock').addEventListener('change', applyDisplaySettings);
+document.getElementById('showLongFormat').addEventListener('change', applyDisplaySettings);
+document.getElementById('customTimersOrder').addEventListener('change', applyDisplaySettings);
+document.getElementById('clockOrder').addEventListener('change', applyDisplaySettings);
+document.getElementById('gaokaoOrder').addEventListener('change', applyDisplaySettings);
+
+function resetAllSettings() {
     settings = { ...defaultSettings };
     saveSettings();
     applySettings();
     updateSettingsUI();
-    settingsPopup.classList.remove('show');
-});
+}
 
 function updateAll() {
     updateCurrentTime();
@@ -669,3 +685,8 @@ setInterval(updateAll, 1000);
 loadSettings();
 loadTheme();
 loadCustomTimers();
+
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+    resetAllSettings();
+    resetTheme();
+});
