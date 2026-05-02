@@ -1,3 +1,4 @@
+/* ==================== 全局变量定义 ==================== */
 :root {
     --bg-primary: #1e1e1e;
     --bg-secondary: #252526;
@@ -13,6 +14,8 @@
     --font-size-countdown: 10em;
     --font-size-gaokao: 2em;
 }
+
+/* ==================== 主题定义 ==================== */
 
 .theme-cyberpunk {
     --bg-primary: #0a0a0f;
@@ -50,6 +53,8 @@
     --font-family: 'Comic Sans MS', cursive;
 }
 
+/* ==================== 基础样式 ==================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -58,7 +63,7 @@
 
 body {
     font-family: var(--font-family);
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
     overflow: hidden;
@@ -84,6 +89,8 @@ body {
     max-width: 1400px;
 }
 
+/* ==================== 时间显示区域 ==================== */
+
 .time-section {
     text-align: center;
     transition: opacity 0.3s ease;
@@ -108,6 +115,8 @@ body {
     margin-top: 10px;
 }
 
+/* ==================== 倒计时区域 ==================== */
+
 .countdown-section {
     text-align: center;
     display: none;
@@ -131,6 +140,57 @@ body {
     margin-top: 15px;
 }
 
+.countdown-controls {
+    display: none;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.countdown-section.active .countdown-controls {
+    display: flex;
+}
+
+.countdown-controls.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.countdown-control-btn {
+    width: 45px;
+    height: 45px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.countdown-control-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.countdown-control-btn:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-color);
+}
+
+.countdown-control-btn.delete:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+    color: white;
+}
+
+/* ==================== 高考倒计时区域 ==================== */
+
 .gaokao-section {
     text-align: center;
     margin-top: 30px;
@@ -151,6 +211,8 @@ body {
     color: var(--accent-color);
 }
 
+/* ==================== 底部控制栏 ==================== */
+
 .control-bar {
     position: fixed;
     bottom: 30px;
@@ -163,7 +225,7 @@ body {
 .control-btn {
     width: 50px;
     height: 50px;
-    background: var(--bg-secondary);
+    background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 50%;
     color: var(--text-primary);
@@ -175,15 +237,22 @@ body {
     transition: all 0.2s ease;
 }
 
+.control-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
 .control-btn:hover {
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border-color: var(--accent-color);
 }
 
 .control-btn.active {
-    background: var(--accent-color);
+    background-color: var(--accent-color);
     color: var(--bg-primary);
 }
+
+/* ==================== 模态框样式 ==================== */
 
 .modal-overlay {
     position: fixed;
@@ -191,7 +260,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     display: none;
     justify-content: center;
     align-items: center;
@@ -203,7 +272,7 @@ body {
 }
 
 .modal {
-    background: var(--bg-secondary);
+    background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     width: 90%;
@@ -254,6 +323,8 @@ body {
     max-height: calc(80vh - 60px);
 }
 
+/* ==================== 倒计时预设按钮 ==================== */
+
 .timer-presets {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -263,7 +334,7 @@ body {
 
 .preset-btn {
     padding: 15px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     color: var(--text-primary);
@@ -274,8 +345,10 @@ body {
 
 .preset-btn:hover {
     border-color: var(--accent-color);
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
 }
+
+/* ==================== 自定义输入框 ==================== */
 
 .custom-input {
     display: flex;
@@ -285,7 +358,7 @@ body {
 .custom-input input {
     flex: 1;
     padding: 10px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
@@ -299,10 +372,10 @@ body {
 
 .modal-btn {
     padding: 10px 20px;
-    background: var(--accent-color);
+    background-color: var(--accent-color);
     border: none;
     border-radius: 6px;
-    color: #fff;
+    color: white;
     cursor: pointer;
     font-size: 1em;
     transition: opacity 0.2s ease;
@@ -317,6 +390,8 @@ body {
     margin-top: 15px;
 }
 
+/* ==================== 课表列表 ==================== */
+
 .schedule-list {
     max-height: 300px;
     overflow-y: auto;
@@ -327,7 +402,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border-radius: 6px;
     margin-bottom: 8px;
 }
@@ -361,7 +436,7 @@ body {
 .schedule-action-btn {
     width: 32px;
     height: 32px;
-    background: transparent;
+    background-color: transparent;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     color: var(--text-secondary);
@@ -372,15 +447,17 @@ body {
 }
 
 .schedule-action-btn:hover {
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
 }
 
 .schedule-action-btn.delete:hover {
-    background: #ff5252;
+    background-color: #ff5252;
     border-color: #ff5252;
     color: white;
 }
+
+/* ==================== 表单样式 ==================== */
 
 .form-group {
     margin-bottom: 15px;
@@ -397,7 +474,7 @@ body {
 .form-group input[type="time"] {
     width: 100%;
     padding: 10px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
@@ -418,6 +495,8 @@ body {
     flex: 1;
 }
 
+/* ==================== 星期选择器 ==================== */
+
 .day-selector {
     display: flex;
     flex-wrap: wrap;
@@ -426,7 +505,7 @@ body {
 
 .day-btn {
     padding: 6px 10px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     color: var(--text-secondary);
@@ -435,10 +514,12 @@ body {
 }
 
 .day-btn.active {
-    background: var(--accent-color);
+    background-color: var(--accent-color);
     border-color: var(--accent-color);
-    color: #fff;
+    color: white;
 }
+
+/* ==================== 设置项 ==================== */
 
 .setting-item {
     margin-bottom: 20px;
@@ -454,7 +535,7 @@ body {
 .setting-item input[type="date"] {
     width: 100%;
     padding: 10px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
@@ -473,6 +554,8 @@ body {
     height: 18px;
     cursor: pointer;
 }
+
+/* ==================== 主题选择 ==================== */
 
 .section-title {
     font-size: 1em;
@@ -495,7 +578,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 12px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     color: var(--text-primary);
@@ -509,7 +592,7 @@ body {
 
 .theme-btn.active {
     border-color: var(--accent-color);
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
 }
 
 .theme-preview {
@@ -520,23 +603,25 @@ body {
 }
 
 .theme-preview.vscode {
-    background: #1e1e1e;
+    background-color: #1e1e1e;
 }
 
 .theme-preview.cyberpunk {
-    background: #0a0a0f;
+    background-color: #0a0a0f;
     border-color: #00ffff;
 }
 
 .theme-preview.ink {
-    background: #f5f5dc;
+    background-color: #f5f5dc;
     border-color: #8b7355;
 }
 
 .theme-preview.mahiro {
-    background: #fff0f5;
+    background-color: #fff0f5;
     border-color: #ffb6c1;
 }
+
+/* ==================== 高级编辑模式 ==================== */
 
 .advanced-edit {
     margin-top: 20px;
@@ -551,7 +636,7 @@ body {
 .element-selector select {
     width: 100%;
     padding: 10px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
@@ -572,7 +657,7 @@ body {
     width: 100%;
     height: 150px;
     padding: 10px;
-    background: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
@@ -585,6 +670,70 @@ body {
     outline: none;
     border-color: var(--accent-color);
 }
+
+/* ==================== 侧边面板 ==================== */
+
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 350px;
+    height: 100vh;
+    background-color: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    visibility: hidden;
+}
+
+.side-panel.active {
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.side-panel-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-tertiary);
+}
+
+.side-panel-header h3 {
+    font-size: 1.2em;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.side-panel-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.side-panel-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.side-panel-body::-webkit-scrollbar-track {
+    background-color: var(--bg-primary);
+}
+
+.side-panel-body::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+.side-panel-body::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-secondary);
+}
+
+/* ==================== 全屏模式 ==================== */
 
 .fullscreen-mode .control-bar {
     opacity: 0;
@@ -603,9 +752,20 @@ body {
     font-size: 16em;
 }
 
+.fullscreen-mode .countdown-controls {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fullscreen-mode .countdown-section:hover .countdown-controls {
+    opacity: 1;
+}
+
 .fullscreen-mode .gaokao-countdown {
     font-size: 2.5em;
 }
+
+/* ==================== 响应式布局 ==================== */
 
 @media (max-width: 768px) {
     :root {
@@ -613,11 +773,11 @@ body {
         --font-size-countdown: 7em;
         --font-size-gaokao: 1.5em;
     }
-    
+
     .timer-presets {
         grid-template-columns: 1fr;
     }
-    
+
     .theme-grid {
         grid-template-columns: 1fr;
     }
