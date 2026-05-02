@@ -1,0 +1,20 @@
+{
+  "name": "水墨古风",
+  "version": "1.0",
+  "type": "preset",
+  "variables": {
+    "--bg-primary": "#f5f5dc",
+    "--bg-secondary": "#e8e8d0",
+    "--bg-tertiary": "#d4d4b8",
+    "--text-primary": "#2c2c2c",
+    "--text-secondary": "#5a5a5a",
+    "--accent-color": "#8b0000",
+    "--accent-color-rgb": "139, 0, 0",
+    "--border-color": "#8b7355",
+    "--font-family": "'STKaiti', 'KaiTi', serif",
+    "--font-size-time": "8em",
+    "--font-size-date": "1.5em",
+    "--font-size-countdown": "9em",
+    "--font-size-gaokao": "2em"
+  }
+}

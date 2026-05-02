@@ -1,0 +1,20 @@
+{
+  "name": "绪山真寻",
+  "version": "1.0",
+  "type": "preset",
+  "variables": {
+    "--bg-primary": "#fff0f5",
+    "--bg-secondary": "#ffe4e1",
+    "--bg-tertiary": "#ffb6c1",
+    "--text-primary": "#ff69b4",
+    "--text-secondary": "#db7093",
+    "--accent-color": "#ff1493",
+    "--accent-color-rgb": "255, 20, 147",
+    "--border-color": "#ffb6c1",
+    "--font-family": "'Comic Sans MS', cursive",
+    "--font-size-time": "8em",
+    "--font-size-date": "1.5em",
+    "--font-size-countdown": "9em",
+    "--font-size-gaokao": "2em"
+  }
+}

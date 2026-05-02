@@ -1,0 +1,20 @@
+{
+  "name": "VS Code",
+  "version": "1.0",
+  "type": "preset",
+  "variables": {
+    "--bg-primary": "#1e1e1e",
+    "--bg-secondary": "#252526",
+    "--bg-tertiary": "#3c3c3c",
+    "--text-primary": "#cccccc",
+    "--text-secondary": "#858585",
+    "--accent-color": "#007acc",
+    "--accent-color-rgb": "0, 122, 204",
+    "--border-color": "#3c3c3c",
+    "--font-family": "'Segoe WPC', 'Segoe UI', sans-serif",
+    "--font-size-time": "8em",
+    "--font-size-date": "1.5em",
+    "--font-size-countdown": "10em",
+    "--font-size-gaokao": "2em"
+  }
+}
