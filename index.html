@@ -170,6 +170,20 @@
                 <button class="modal-btn full-width" id="saveSettingsBtn">保存设置</button>
             </div>
         </div>
+
+        <div class="modal" id="newThemeModal">
+            <div class="modal-header">
+                <h3>新建主题</h3>
+                <button class="modal-close" id="closeNewThemeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>主题名称</label>
+                    <input type="text" id="newThemeName" placeholder="输入主题名称">
+                </div>
+                <button class="modal-btn full-width" id="saveNewThemeBtn">创建主题</button>
+            </div>
+        </div>
     </div>
 
     <div class="side-panel" id="personalizeSidePanel">
@@ -178,8 +192,10 @@
             <button class="modal-close" id="closePersonalizeSide">×</button>
         </div>
         <div class="side-panel-body">
-            <div class="theme-presets">
-                <div class="section-title">预设主题</div>
+
+            <!-- 主题选择 -->
+            <section class="panel-section">
+                <h4 class="panel-section-title">主题</h4>
                 <div class="theme-grid">
                     <button class="theme-btn" data-theme="vscode">
                         <span class="theme-preview vscode"></span>
@@ -198,39 +214,71 @@
                         <span>绪山真寻</span>
                     </button>
                 </div>
-                <button class="modal-btn full-width" id="resetThemeBtn">恢复预设主题</button>
-            </div>
+                <div class="custom-themes-list" id="customThemesContainer"></div>
+                <button class="modal-btn full-width" id="newThemeBtn">+ 新建主题</button>
+                <button class="modal-btn secondary full-width" id="resetThemeBtn">恢复预设</button>
+            </section>
 
-            <div class="import-export-section">
-                <div class="section-title">导入/导出</div>
-                <div class="import-export-buttons">
-                    <button class="modal-btn" id="importConfigBtn">导入配置</button>
-                    <button class="modal-btn" id="exportConfigBtn">导出配置</button>
+            <!-- 布局设置 -->
+            <section class="panel-section">
+                <h4 class="panel-section-title">布局</h4>
+                <div class="layout-presets">
+                    <button class="layout-btn" data-layout="compact">紧凑</button>
+                    <button class="layout-btn active" data-layout="default">默认</button>
+                    <button class="layout-btn" data-layout="spaced">宽松</button>
                 </div>
-            </div>
+            </section>
 
-            <div class="advanced-edit">
-                <div class="section-title">
-                    <label><input type="checkbox" id="advancedModeToggleSide"> 高级编辑模式</label>
+            <!-- 元素微调 -->
+            <section class="panel-section">
+                <h4 class="panel-section-title">微调</h4>
+                <div class="element-selector">
+                    <select id="adjustElementSelect">
+                        <option value="">选择元素...</option>
+                        <option value="timeSection">当前时间</option>
+                        <option value="countdownSection">倒计时</option>
+                        <option value="gaokaoSection">高考倒计时</option>
+                    </select>
                 </div>
-                <div class="advanced-panel" id="advancedPanelSide" style="display:none;">
-                    <div class="element-selector">
-                        <label>选择元素</label>
-                        <select id="elementSelectorSide">
-                            <option value="#currentTime">当前时间</option>
-                            <option value="#currentDate">当前日期</option>
-                            <option value="#countdownTime">倒计时时间</option>
-                            <option value="#countdownLabel">倒计时标签</option>
-                            <option value="#gaokaoSection">高考倒计时区域</option>
-                        </select>
+                <div class="adjust-controls" id="adjustControls">
+                    <div class="adjust-row">
+                        <button class="adjust-btn" data-dir="up">↑ 上移</button>
+                        <button class="adjust-btn" data-dir="down">↓ 下移</button>
                     </div>
-                    <div class="css-editor">
-                        <label>CSS属性</label>
-                        <textarea id="cssEditorSide" placeholder="color: #fff;&#10;font-size: 2em;&#10;"></textarea>
-                    </div>
-                    <button class="modal-btn" id="applyCssBtnSide">应用样式</button>
+                    <button class="modal-btn secondary full-width" id="resetElementBtn">重置</button>
                 </div>
-            </div>
+            </section>
+
+            <!-- 导入导出 -->
+            <section class="panel-section">
+                <h4 class="panel-section-title">主题管理</h4>
+                <div class="btn-group">
+                    <button class="modal-btn" id="importThemeFolderBtn">📁 导入</button>
+                    <button class="modal-btn" id="downloadTemplateBtn">📥 模板</button>
+                </div>
+                <div class="btn-group">
+                    <button class="modal-btn" id="importConfigBtn">⬇️ 导入配置</button>
+                    <button class="modal-btn" id="exportConfigBtn">⬆️ 导出配置</button>
+                </div>
+            </section>
+
+            <!-- 高级编辑 -->
+            <section class="panel-section">
+                <label class="toggle-label">
+                    <input type="checkbox" id="advancedModeToggleSide">
+                    <span>高级编辑模式</span>
+                </label>
+                <div class="advanced-panel" id="advancedPanelSide">
+                    <select id="elementSelectorSide">
+                        <option value="#currentTime">当前时间</option>
+                        <option value="#currentDate">当前日期</option>
+                        <option value="#countdownTime">倒计时</option>
+                        <option value="#gaokaoSection">高考区域</option>
+                    </select>
+                    <textarea id="cssEditorSide" placeholder="color: #fff;&#10;font-size: 2em;"></textarea>
+                    <button class="modal-btn" id="applyCssBtnSide">应用</button>
+                </div>
+            </section>
         </div>
     </div>
 

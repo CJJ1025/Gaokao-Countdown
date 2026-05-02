@@ -1,0 +1,182 @@
+{
+    "version": "1.0",
+    "name": "Windows 11",
+    "description": "Windows 11 风格主题，采用微软 Fluent Design 设计语言",
+    "author": "Clock Team",
+    "createdAt": "2026-05-02",
+    "styles": {
+        "global": {
+            "--bg-primary": "#1a1a1a",
+            "--bg-secondary": "#252525",
+            "--bg-tertiary": "#323232",
+            "--text-primary": "#ffffff",
+            "--text-secondary": "#b0b0b0",
+            "--accent-color": "#0078d4",
+            "--accent-color-rgb": "0, 120, 212",
+            "--border-color": "#3c3c3c",
+            "--font-family": "'Segoe UI', 'Segoe WP', sans-serif",
+            "--font-size-time": "8em",
+            "--font-size-date": "1.5em",
+            "--font-size-countdown": "10em",
+            "--font-size-gaokao": "2em",
+            "--border-radius": "8px",
+            "--border-width": "1px",
+            "--opacity-primary": "1",
+            "--opacity-secondary": "0.8"
+        },
+        "elements": {
+            "appContainer": {
+                "background": "none",
+                "backgroundColor": "var(--bg-primary)",
+                "backgroundImage": null,
+                "backgroundRepeat": "no-repeat",
+                "backgroundSize": "cover",
+                "backgroundPosition": "center"
+            },
+            "mainDisplay": {
+                "background": "none",
+                "backgroundColor": "transparent",
+                "border": "none"
+            },
+            "timeSection": {
+                "background": "none",
+                "backgroundColor": "rgba(37, 37, 37, 0.9)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "12px",
+                "padding": "20px 40px",
+                "backdropFilter": "blur(10px)"
+            },
+            "currentTime": {
+                "color": "var(--text-primary)",
+                "fontSize": "var(--font-size-time)",
+                "fontWeight": "300",
+                "textAlign": "center",
+                "letterSpacing": "2px"
+            },
+            "currentDate": {
+                "color": "var(--text-secondary)",
+                "fontSize": "var(--font-size-date)",
+                "textAlign": "center",
+                "marginTop": "10px"
+            },
+            "countdownSection": {
+                "background": "none",
+                "backgroundColor": "rgba(0, 120, 212, 0.15)",
+                "border": "1px solid rgba(0, 120, 212, 0.3)",
+                "borderRadius": "12px",
+                "padding": "30px 50px",
+                "backdropFilter": "blur(10px)"
+            },
+            "countdownTime": {
+                "color": "var(--accent-color)",
+                "fontSize": "var(--font-size-countdown)",
+                "fontWeight": "400",
+                "textAlign": "center",
+                "textShadow": "0 0 30px rgba(0, 120, 212, 0.5)"
+            },
+            "countdownLabel": {
+                "color": "var(--text-secondary)",
+                "fontSize": "1.5em",
+                "textAlign": "center",
+                "marginTop": "15px"
+            },
+            "gaokaoSection": {
+                "background": "none",
+                "backgroundColor": "rgba(37, 37, 37, 0.8)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "8px",
+                "padding": "15px 30px"
+            },
+            "gaokaoCountdown": {
+                "color": "var(--text-primary)",
+                "fontSize": "var(--font-size-gaokao)",
+                "textAlign": "center"
+            },
+            "controlBar": {
+                "background": "rgba(37, 37, 37, 0.95)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "16px",
+                "backdropFilter": "blur(20px)"
+            },
+            "controlBtn": {
+                "background": "transparent",
+                "border": "none",
+                "borderRadius": "8px",
+                "color": "var(--text-secondary)",
+                "hoverBackgroundColor": "rgba(255, 255, 255, 0.1)",
+                "hoverColor": "var(--text-primary)"
+            },
+            "countdownControlBtn": {
+                "background": "rgba(50, 50, 50, 0.8)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "8px",
+                "color": "var(--text-primary)",
+                "hoverBackgroundColor": "var(--accent-color)",
+                "hoverColor": "#ffffff"
+            },
+            "sidePanel": {
+                "background": "rgba(26, 26, 26, 0.98)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "16px 0 0 16px"
+            },
+            "modal": {
+                "background": "rgba(37, 37, 37, 0.95)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "12px",
+                "backdropFilter": "blur(20px)"
+            },
+            "modalBtn": {
+                "background": "var(--accent-color)",
+                "border": "none",
+                "borderRadius": "6px",
+                "color": "#ffffff",
+                "padding": "10px 20px",
+                "hoverBackgroundColor": "#005a9e"
+            },
+            "themeBtn": {
+                "background": "rgba(50, 50, 50, 0.5)",
+                "border": "1px solid var(--border-color)",
+                "borderRadius": "8px",
+                "hoverBorderColor": "var(--accent-color)"
+            },
+            "layoutPresetItem": {
+                "background": "rgba(50, 50, 50, 0.5)",
+                "border": "2px solid transparent",
+                "borderRadius": "8px",
+                "hoverBorderColor": "var(--accent-color)",
+                "activeBorderColor": "var(--accent-color)",
+                "activeBackgroundColor": "rgba(0, 120, 212, 0.2)"
+            },
+            "customThemeItem": {
+                "background": "rgba(50, 50, 50, 0.5)",
+                "border": "1px solid transparent",
+                "borderRadius": "6px",
+                "hoverBorderColor": "var(--border-color)",
+                "activeBorderColor": "var(--accent-color)"
+            }
+        },
+        "buttons": {
+            "personalizeBtn": {
+                "icon": null
+            },
+            "scheduleBtn": {
+                "icon": null
+            },
+            "settingsBtn": {
+                "icon": null
+            },
+            "countdownBtn": {
+                "icon": null
+            },
+            "fullscreenBtn": {
+                "icon": null
+            }
+        },
+        "animations": {
+            "enable": true,
+            "type": "fade",
+            "duration": "300ms",
+            "timingFunction": "ease"
+        }
+    }
+}

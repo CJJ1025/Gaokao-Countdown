@@ -1,214 +1,288 @@
 /**
  * 个性化模块 - 导入导出管理
- * 处理主题导入导出、自定义资源管理等功能
+ * 支持文件夹导入、自定义主题、模板下载
  */
 
 const ClockPersonalize = (function() {
     'use strict';
+
+    let hasAutoCreatedTheme = false;
 
     /**
      * 初始化个性化模块
      */
     function init() {
         setupEventListeners();
+        setupAutoCreateThemeListeners();
+        renderCustomThemesList();
+        renderLayoutPresets();
     }
 
     /**
-     * 导出完整配置
+     * 设置自动创建主题的事件监听
      */
-    function exportConfig() {
-        const config = ClockCore.exportConfig();
-        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `clock-config-${Date.now()}.json`;
-        a.click();
-
-        URL.revokeObjectURL(url);
-        ClockCore.emit('configExported', config);
-    }
-
-    /**
-     * 导入配置文件
-     */
-    async function importConfig(file) {
-        try {
-            const text = await file.text();
-            const config = JSON.parse(text);
-            ClockCore.importConfig(config);
-            ClockCore.emit('configImported', config);
-            return config;
-        } catch (e) {
-            console.error('Failed to import config:', e);
-            throw new Error('配置文件格式无效');
-        }
-    }
-
-    /**
-     * 处理文件导入（支持拖放）
-     */
-    function handleFileDrop(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
-            const file = files[0];
-            if (file.type === 'application/json' || file.name.endsWith('.json')) {
-                importConfig(file);
-            }
-        }
-    }
-
-    /**
-     * 处理文件夹导入（File System Access API）
-     */
-    async function importFromDirectory() {
-        if (!('showDirectoryPicker' in window)) {
-            alert('您的浏览器不支持文件夹选择，请使用Chrome或Edge浏览器');
-            return;
-        }
-
-        try {
-            const dirHandle = await window.showDirectoryPicker();
-            const configFile = await dirHandle.getFileHandle('config.json');
-            const file = await configFile.getFile();
-            const config = JSON.parse(await file.text());
-
-            // 导入背景图（如果存在）
-            const backgroundHandle = await dirHandle.getFileHandle('background').catch(() => null);
-            if (backgroundHandle) {
-                const bgFile = await backgroundHandle.getFile();
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.body.style.backgroundImage = `url(${e.target.result})`;
-                    document.body.style.backgroundSize = 'cover';
-                };
-                reader.readAsDataURL(bgFile);
-            }
-
-            ClockCore.importConfig(config);
-            ClockCore.emit('configImported', config);
-        } catch (e) {
-            if (e.name !== 'AbortError') {
-                console.error('Failed to import from directory:', e);
-            }
-        }
-    }
-
-    /**
-     * 导出到文件夹（File System Access API）
-     */
-    async function exportToDirectory() {
-        if (!('showDirectoryPicker' in window)) {
-            alert('您的浏览器不支持文件夹选择，请使用Chrome或Edge浏览器');
-            exportConfig();
-            return;
-        }
-
-        try {
-            const dirHandle = await window.showDirectoryPicker();
-            const config = ClockCore.exportConfig();
-
-            // 写入config.json
-            const configFile = await dirHandle.getFileHandle('config.json', { create: true });
-            const writable = await configFile.createWritable();
-            await writable.write(JSON.stringify(config, null, 2));
-            await writable.close();
-
-            // 保存背景图（如果有）
-            const bgImage = document.body.style.backgroundImage;
-            if (bgImage && bgImage !== 'none') {
-                const bgUrl = bgImage.match(/url\("?(.+?)"?\)/)?.[1];
-                if (bgUrl && bgUrl.startsWith('data:')) {
-                    const bgFile = await dirHandle.getFileHandle('background', { create: true });
-                    const bgWritable = await bgFile.createWritable();
-                    const base64 = bgUrl.split(',')[1];
-                    const binary = atob(base64);
-                    const array = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) {
-                        array[i] = binary.charCodeAt(i);
-                    }
-                    await bgWritable.write(array);
-                    await bgWritable.close();
-                }
-            }
-
-            ClockCore.emit('configExported', config);
-            alert('配置已保存到文件夹');
-        } catch (e) {
-            if (e.name !== 'AbortError') {
-                console.error('Failed to export to directory:', e);
-            }
-        }
-    }
-
-    /**
-     * 导入主题文件
-     */
-    async function importThemeFile(file) {
-        try {
-            const text = await file.text();
-            const themeConfig = JSON.parse(text);
-            ClockTheme.importTheme(themeConfig);
-        } catch (e) {
-            console.error('Failed to import theme:', e);
-            throw new Error('主题文件格式无效');
-        }
-    }
-
-    /**
-     * 导出当前主题
-     */
-    function exportCurrentTheme() {
-        const themeName = ClockCore.get('currentTheme');
-        const themeData = ClockTheme.exportTheme(themeName);
-        if (!themeData) {
-            alert('无法导出当前主题');
-            return;
-        }
-
-        const blob = new Blob([JSON.stringify(themeData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `theme-${themeName}-${Date.now()}.json`;
-        a.click();
-
-        URL.revokeObjectURL(url);
-    }
-
-    /**
-     * 保存当前配置为自定义主题
-     */
-    function saveAsCustomTheme(name) {
-        if (!name || !name.trim()) {
-            alert('请输入主题名称');
-            return;
-        }
-
-        const currentTheme = ClockTheme.getCurrentTheme();
-        ClockTheme.saveCustomTheme(name.trim(), {
-            variables: currentTheme?.variables || {},
-            customCss: currentTheme?.customCss || ''
+    function setupAutoCreateThemeListeners() {
+        ClockCore.on('layoutChanged', () => {
+            autoCreateThemeIfNeeded();
         });
 
-        ClockCore.emit('customThemeCreated', { name: name.trim() });
+        ClockCore.on('elementStyleChanged', () => {
+            autoCreateThemeIfNeeded();
+        });
+
+        ClockCore.on('themeApplied', () => {
+            hasAutoCreatedTheme = false;
+        });
+    }
+
+    /**
+     * 检查是否需要自动创建主题
+     */
+    function autoCreateThemeIfNeeded() {
+        const currentTheme = ClockCore.get('currentTheme');
+        
+        if (!ClockCore.isPresetTheme(currentTheme) || hasAutoCreatedTheme) {
+            return;
+        }
+
+        createUntitledTheme();
+        hasAutoCreatedTheme = true;
+    }
+
+    /**
+     * 创建未命名主题
+     */
+    function createUntitledTheme() {
+        const themeName = ClockCore.getNextUntitledThemeName();
+        const currentThemeData = ClockTheme.getCurrentTheme();
+        
+        ClockTheme.saveCustomTheme(themeName, {
+            variables: currentThemeData?.variables || {},
+            customCss: currentThemeData?.customCss || ''
+        });
+
+        ClockTheme.applyTheme(themeName);
+        renderCustomThemesList();
+        
+        ClockCore.emit('customThemeCreated', { name: themeName, auto: true });
+    }
+
+    /**
+     * 渲染自定义主题列表
+     */
+    function renderCustomThemesList() {
+        const container = document.getElementById('customThemesContainer');
+        if (!container) return;
+
+        const customThemes = ClockCore.get('customThemes') || [];
+        const folderThemes = ClockTheme.getFolderThemes();
+        const currentTheme = ClockCore.get('currentTheme');
+
+        let html = '';
+
+        customThemes.forEach(theme => {
+            const isActive = theme.name === currentTheme;
+            html += `
+                <div class="custom-theme-item ${isActive ? 'active' : ''}" data-theme="${theme.name}">
+                    <div class="custom-theme-preview" style="background: ${theme.variables?.['--bg-primary'] || '#333'}"></div>
+                    <span class="custom-theme-name">${theme.name}</span>
+                    <button class="custom-theme-apply" data-theme="${theme.name}" title="应用">✓</button>
+                    <button class="custom-theme-delete" data-theme="${theme.name}" title="删除">×</button>
+                </div>
+            `;
+        });
+
+        folderThemes.forEach(theme => {
+            const isActive = theme.name === currentTheme;
+            html += `
+                <div class="custom-theme-item folder-theme ${isActive ? 'active' : ''}" data-theme="${theme.name}">
+                    <div class="custom-theme-preview" style="background: ${theme.config?.styles?.global?.['--bg-primary'] || '#333'}"></div>
+                    <span class="custom-theme-name">${theme.name} <span class="folder-badge">📁</span></span>
+                    <button class="custom-theme-apply" data-theme="${theme.name}" title="应用">✓</button>
+                    <button class="custom-theme-delete" data-theme="${theme.name}" title="删除">×</button>
+                </div>
+            `;
+        });
+
+        if (html === '') {
+            html = '<div class="no-custom-themes">暂无自定义主题</div>';
+        }
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('.custom-theme-apply').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const themeName = btn.dataset.theme;
+                await ClockTheme.applyTheme(themeName);
+            });
+        });
+
+        container.querySelectorAll('.custom-theme-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const themeName = btn.dataset.theme;
+                if (confirm(`确定要删除主题「${themeName}」吗？`)) {
+                    ClockTheme.deleteCustomTheme(themeName);
+                    renderCustomThemesList();
+                }
+            });
+        });
+    }
+
+    /**
+     * 渲染布局预设
+     */
+    function renderLayoutPresets() {
+        const presets = document.querySelectorAll('.layout-btn');
+        const currentLayout = ClockCore.get('currentLayout') || 'default';
+
+        presets.forEach(preset => {
+            const isActive = preset.dataset.layout === currentLayout;
+            preset.classList.toggle('active', isActive);
+
+            preset.addEventListener('click', () => {
+                ClockGrid.applyPresetLayout(preset.dataset.layout);
+            });
+        });
+    }
+
+    /**
+     * 导入文件夹主题
+     */
+    async function importFolderTheme() {
+        try {
+            const dirHandle = await window.showDirectoryPicker({
+                mode: 'read',
+                startIn: 'documents'
+            });
+
+            const theme = await ClockTheme.importFolderTheme(dirHandle);
+            await ClockTheme.applyTheme(theme.name);
+            
+            alert(`主题「${theme.name}」导入成功！`);
+            renderCustomThemesList();
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('导入失败:', error);
+                alert('导入失败: ' + error.message);
+            }
+        }
+    }
+
+    /**
+     * 下载主题模板
+     */
+    async function downloadThemeTemplate() {
+        try {
+            const examplesTopicPath = 'assets/themes/ExamplesTopic';
+            
+            const [configRes, readmeRes] = await Promise.all([
+                fetch(`${examplesTopicPath}/config.json`),
+                fetch(`${examplesTopicPath}/README.md`)
+            ]);
+            
+            const configJson = await configRes.text();
+            const readmeMd = await readmeRes.text();
+            
+            if (window.showSaveFilePicker) {
+                alert('提示：请手动下载 ExamplesTopic 文件夹，或参考以下内容创建主题。');
+            } else {
+                alert('请从以下位置获取模板：' + window.location.href.replace(window.location.hash, '') + 'assets/themes/ExamplesTopic');
+            }
+
+            const previewWindow = window.open('', '_blank');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ExamplesTopic 模板说明</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background: #1a1a1a; color: #ddd; }
+                        pre { background: #2d2d2d; padding: 15px; border-radius: 8px; overflow: auto; }
+                        code { color: #9cdcfe; }
+                        h1, h2 { color: #0078d4; }
+                    </style>
+                </head>
+                <body>
+                    <h1>📁 ExamplesTopic 自定义主题模板</h1>
+                    <h2>config.json</h2>
+                    <pre><code>${configJson.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+                    <h2>README.md</h2>
+                    <pre><code>${readmeMd.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+                    <h2>获取方式</h2>
+                    <p>访问：${window.location.href.replace(window.location.hash, '')}assets/themes/ExamplesTopic/</p>
+                    <p>或者在项目目录的 assets/themes/ExamplesTopic 文件夹中找到模板文件</p>
+                </body>
+                </html>
+            `);
+            previewWindow.document.close();
+        } catch (error) {
+            console.error('下载模板失败:', error);
+            alert('下载模板失败，请检查网络或从项目文件夹中直接获取。');
+        }
+    }
+
+    /**
+     * 元素选择变化
+     */
+    function handleElementSelect(e) {
+        const elementKey = e.target.value;
+
+        if (elementKey) {
+            ClockGrid.selectElement(elementKey);
+            autoCreateThemeIfNeeded();
+        } else {
+            ClockGrid.deselectElement();
+        }
+    }
+
+    /**
+     * 元素微调
+     */
+    function handleElementAdjust(direction) {
+        const selectedElement = ClockGrid.getSelectedElement();
+        if (!selectedElement) return;
+        
+        ClockGrid.adjustElement(selectedElement, direction);
+        autoCreateThemeIfNeeded();
+    }
+
+    /**
+     * Z轴调整
+     */
+    function handleZIndexAdjust(direction) {
+        const selectedElement = ClockGrid.getSelectedElement();
+        if (!selectedElement) return;
+        
+        ClockGrid.adjustZIndex(selectedElement, direction);
+        autoCreateThemeIfNeeded();
+    }
+
+    /**
+     * 重置元素位置
+     */
+    function handleResetElement() {
+        const selectedElement = ClockGrid.getSelectedElement();
+        if (!selectedElement) return;
+        
+        ClockGrid.resetElementPosition(selectedElement);
+        autoCreateThemeIfNeeded();
     }
 
     /**
      * 设置事件监听
      */
     function setupEventListeners() {
-        // 侧边面板开关
         document.getElementById('personalizeBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const panel = document.getElementById('personalizeSidePanel');
             panel?.classList.toggle('active');
+            if (panel?.classList.contains('active')) {
+                renderCustomThemesList();
+                renderLayoutPresets();
+            }
         });
 
         document.getElementById('closePersonalizeSide')?.addEventListener('click', (e) => {
@@ -217,28 +291,93 @@ const ClockPersonalize = (function() {
             document.getElementById('personalizeSidePanel')?.classList.remove('active');
         });
 
-        // 点击空白处关闭
+        document.getElementById('newThemeBtn')?.addEventListener('click', () => {
+            const modal = document.getElementById('newThemeModal');
+            modal?.classList.add('active');
+            document.getElementById('newThemeName')?.focus();
+        });
+
+        document.getElementById('saveNewThemeBtn')?.addEventListener('click', () => {
+            const nameInput = document.getElementById('newThemeName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('请输入主题名称');
+                return;
+            }
+
+            let finalName = name;
+            const customThemes = ClockCore.get('customThemes') || [];
+            while (customThemes.some(t => t.name === finalName)) {
+                finalName += 'c';
+            }
+
+            const currentTheme = ClockTheme.getCurrentTheme();
+            ClockTheme.saveCustomTheme(finalName, {
+                variables: currentTheme?.variables || {},
+                customCss: currentTheme?.customCss || ''
+            });
+
+            document.getElementById('newThemeModal')?.classList.remove('active');
+            nameInput.value = '';
+            ClockTheme.applyTheme(finalName);
+            renderCustomThemesList();
+        });
+
+        document.getElementById('closeNewThemeModal')?.addEventListener('click', () => {
+            document.getElementById('newThemeModal')?.classList.remove('active');
+        });
+
+        document.getElementById('importThemeFolderBtn')?.addEventListener('click', importFolderTheme);
+        document.getElementById('downloadTemplateBtn')?.addEventListener('click', downloadThemeTemplate);
+
+        document.getElementById('resetThemeBtn')?.addEventListener('click', () => {
+            ClockTheme.applyTheme('vscode');
+        });
+
+        document.getElementById('adjustElementSelect')?.addEventListener('change', handleElementSelect);
+
+        document.querySelectorAll('.adjust-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('click', () => handleElementAdjust(btn.dataset.dir));
+        });
+
+        document.querySelectorAll('.adjust-btn[data-z]').forEach(btn => {
+            btn.addEventListener('click', () => handleZIndexAdjust(btn.dataset.z));
+        });
+
+        document.getElementById('resetElementBtn')?.addEventListener('click', handleResetElement);
+
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('personalizeSidePanel');
             const btn = document.getElementById('personalizeBtn');
             if (panel?.classList.contains('active')) {
-                if (!panel.contains(e.target) && !btn.contains(e.target)) {
+                if (!panel.contains(e.target) && !btn?.contains(e.target)) {
                     panel.classList.remove('active');
                 }
             }
         });
+
+        ClockCore.on('customThemeCreated', () => {
+            renderCustomThemesList();
+        });
+
+        ClockCore.on('folderThemeImported', () => {
+            renderCustomThemesList();
+        });
+
+        ClockCore.on('customThemeDeleted', () => {
+            renderCustomThemesList();
+        });
+
+        ClockCore.on('layoutChanged', () => {
+            renderLayoutPresets();
+        });
     }
 
-    // 公开API
     return {
         init,
-        exportConfig,
-        importConfig,
-        handleFileDrop,
-        importFromDirectory,
-        exportToDirectory,
-        importThemeFile,
-        exportCurrentTheme,
-        saveAsCustomTheme
+        renderCustomThemesList,
+        importFolderTheme,
+        downloadThemeTemplate
     };
 })();

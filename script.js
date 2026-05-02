@@ -110,7 +110,7 @@ const ClockApp = (function() {
         document.getElementById('advancedModeToggleSide')?.addEventListener('change', (e) => {
             const panel = document.getElementById('advancedPanelSide');
             if (panel) {
-                panel.style.display = e.target.checked ? 'block' : 'none';
+                panel.classList.toggle('show', e.target.checked);
             }
         });
 

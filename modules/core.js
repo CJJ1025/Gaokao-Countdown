@@ -24,6 +24,8 @@ const ClockCore = (function() {
             currentTheme: 'vscode',
             customCss: {}
         },
+        currentLayout: 'default',
+        elementStyles: {},
         gridLayout: {
             enabled: false,
             columns: 3,
@@ -38,6 +40,9 @@ const ClockCore = (function() {
         }
     };
 
+    // 预设主题列表（这些主题不能修改）
+    const presetThemeNames = ['vscode', 'cyberpunk', 'ink', 'mahiro'];
+
     // 全局状态
     let state = {};
 
@@ -49,7 +54,42 @@ const ClockCore = (function() {
      */
     function init() {
         loadState();
+        cleanupOldStyles();
         setupEventListeners();
+    }
+
+    /**
+     * 清理旧的绝对定位样式
+     */
+    function cleanupOldStyles() {
+        const elements = ['#timeSection', '#countdownSection', '#gaokaoSection'];
+        
+        elements.forEach(selector => {
+            const el = document.querySelector(selector);
+            if (el) {
+                el.style.removeProperty('position');
+                el.style.removeProperty('top');
+                el.style.removeProperty('left');
+                el.style.removeProperty('right');
+                el.style.removeProperty('transform');
+            }
+        });
+
+        // 重置旧的 elementStyles
+        const oldStyles = state.elementStyles || {};
+        let cleaned = false;
+        
+        Object.entries(oldStyles).forEach(([key, styles]) => {
+            if (styles.position || styles.top || styles.left || styles.right || styles.transform) {
+                delete oldStyles[key];
+                cleaned = true;
+            }
+        });
+        
+        if (cleaned) {
+            state.elementStyles = oldStyles;
+            saveState();
+        }
     }
 
     /**
@@ -79,6 +119,8 @@ const ClockCore = (function() {
                 schedule: state.schedule,
                 currentTheme: state.currentTheme,
                 customThemes: state.customThemes,
+                currentLayout: state.currentLayout,
+                elementStyles: state.elementStyles,
                 gridLayout: state.gridLayout,
                 animation: state.animation
             };
@@ -178,6 +220,25 @@ const ClockCore = (function() {
     }
 
     /**
+     * 检查是否是预设主题
+     */
+    function isPresetTheme(themeName) {
+        return presetThemeNames.includes(themeName);
+    }
+
+    /**
+     * 生成下一个未命名主题名称
+     */
+    function getNextUntitledThemeName() {
+        const customThemes = get('customThemes') || [];
+        let index = 1;
+        while (customThemes.some(t => t.name === `未命名-${index}`)) {
+            index++;
+        }
+        return `未命名-${index}`;
+    }
+
+    /**
      * 设置基础事件监听
      */
     function setupEventListeners() {
@@ -190,6 +251,55 @@ const ClockCore = (function() {
                 saveState();
             }
         });
+
+        // 初始化控制栏自动隐藏
+        initControlBarAutoHide();
+    }
+
+    /**
+     * 初始化控制栏自动隐藏
+     */
+    function initControlBarAutoHide() {
+        const controlBar = document.getElementById('controlBar');
+        if (!controlBar) return;
+
+        let hideTimer = null;
+        const HIDE_DELAY = 5000; // 5秒
+
+        function showControlBar() {
+            controlBar.classList.remove('hidden');
+            resetHideTimer();
+        }
+
+        function hideControlBar() {
+            controlBar.classList.add('hidden');
+        }
+
+        function resetHideTimer() {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
+        }
+
+        // 监听用户操作
+        const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+        events.forEach(event => {
+            document.addEventListener(event, showControlBar, { passive: true });
+        });
+
+        // 侧边栏活动时不隐藏
+        const sidePanel = document.getElementById('personalizeSidePanel');
+        if (sidePanel) {
+            sidePanel.addEventListener('mouseenter', () => {
+                clearTimeout(hideTimer);
+                controlBar.classList.remove('hidden');
+            });
+            sidePanel.addEventListener('mouseleave', () => {
+                resetHideTimer();
+            });
+        }
+
+        // 启动计时器
+        resetHideTimer();
     }
 
     /**
@@ -202,6 +312,8 @@ const ClockCore = (function() {
             currentTheme: state.currentTheme,
             customThemes: state.customThemes,
             schedule: state.schedule,
+            currentLayout: state.currentLayout,
+            elementStyles: state.elementStyles,
             gridLayout: state.gridLayout,
             animation: state.animation,
             exportedAt: new Date().toISOString()
@@ -216,6 +328,8 @@ const ClockCore = (function() {
         if (config.currentTheme) state.currentTheme = config.currentTheme;
         if (config.customThemes) state.customThemes = config.customThemes;
         if (config.schedule) state.schedule = config.schedule;
+        if (config.currentLayout) state.currentLayout = config.currentLayout;
+        if (config.elementStyles) state.elementStyles = { ...state.elementStyles, ...config.elementStyles };
         if (config.gridLayout) state.gridLayout = { ...state.gridLayout, ...config.gridLayout };
         if (config.animation) state.animation = { ...state.animation, ...config.animation };
         saveState();
@@ -238,6 +352,8 @@ const ClockCore = (function() {
         deepClone,
         exportConfig,
         importConfig,
+        isPresetTheme,
+        getNextUntitledThemeName,
         defaultState
     };
 })();
