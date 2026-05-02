@@ -219,6 +219,13 @@ body {
     display: flex;
     gap: 10px;
     z-index: 100;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.control-bar.hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
 }
 
 .control-btn {
@@ -706,8 +713,135 @@ body {
     font-size: 0.9em;
     color: var(--text-secondary);
     margin: 0 0 10px 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+}
+
+/* ==================== 自定义主题列表 ==================== */
+
+.custom-themes-list {
+    margin: 10px 0;
+}
+
+.custom-theme-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+}
+
+.custom-theme-item:hover {
+    border-color: var(--accent-color);
+}
+
+.custom-theme-item.active {
+    border-color: var(--accent-color);
+    background: var(--bg-primary);
+}
+
+.custom-theme-preview {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.custom-theme-name {
+    flex: 1;
+    font-size: 0.9em;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-theme-apply,
+.custom-theme-delete {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.custom-theme-apply {
+    background: var(--accent-color);
+    color: white;
+}
+
+.custom-theme-delete {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.custom-theme-apply:hover,
+.custom-theme-delete:hover {
+    opacity: 1;
+}
+
+.custom-theme-delete:hover {
+    background: #ff5252;
+    border-color: #ff5252;
+    color: white;
+}
+
+.no-custom-themes {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    padding: 15px;
+}
+
+/* ==================== 按钮行 ==================== */
+
+.btn-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+/* ==================== 高级编辑器 ==================== */
+
+.advanced-editor {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.advanced-editor label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.advanced-editor textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Consolas', monospace;
+    font-size: 0.85em;
+    resize: vertical;
+    margin-bottom: 8px;
 }
 
 /* ==================== 布局按钮 ==================== */

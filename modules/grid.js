@@ -161,21 +161,22 @@ const ClockGrid = (function() {
         const el = document.querySelector(config?.selector);
         if (!el) return;
 
-        let marginProp = 'marginTop';
-        let currentValue = parseFloat(el.style.marginTop) || 0;
-        
+        const currentValue = parseFloat(el.style.marginTop) || 0;
+        let newValue;
+
         switch (direction) {
             case 'up':
-                currentValue = Math.max(0, currentValue - step);
-                el.style.marginTop = currentValue + 'px';
+                newValue = Math.max(0, currentValue - step);
                 break;
             case 'down':
-                currentValue = currentValue + step;
-                el.style.marginTop = currentValue + 'px';
+                newValue = currentValue + step;
                 break;
+            default:
+                return;
         }
-        
-        saveElementStyles(elementKey, { marginTop: el.style.marginTop });
+
+        el.style.marginTop = newValue + 'px';
+        saveElementStyles(elementKey, { marginTop: newValue + 'px' });
     }
 
     /**

@@ -101,19 +101,6 @@ const ClockApp = (function() {
             });
         });
 
-        // 预设主题恢复按钮
-        document.getElementById('resetThemeBtn')?.addEventListener('click', () => {
-            ClockTheme.resetToDefault();
-        });
-
-        // 高级编辑模式开关
-        document.getElementById('advancedModeToggleSide')?.addEventListener('change', (e) => {
-            const panel = document.getElementById('advancedPanelSide');
-            if (panel) {
-                panel.classList.toggle('show', e.target.checked);
-            }
-        });
-
         // 应用自定义CSS
         document.getElementById('applyCssBtnSide')?.addEventListener('click', () => {
             const selector = document.getElementById('elementSelectorSide')?.value;
@@ -121,25 +108,6 @@ const ClockApp = (function() {
             if (selector && cssText !== undefined) {
                 ClockTheme.applyCustomCss(selector, cssText);
             }
-        });
-
-        // 导入配置
-        document.getElementById('importConfigBtn')?.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = async (e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                    try {
-                        await ClockPersonalize.importConfig(file);
-                        alert('配置导入成功');
-                    } catch (err) {
-                        alert('导入失败: ' + err.message);
-                    }
-                }
-            };
-            input.click();
         });
 
         // 导出配置
@@ -244,7 +212,7 @@ const ClockApp = (function() {
         const diff = gaokaoDate - now;
 
         if (diff <= 0) {
-            document.getElementById('gaokaoDays').textContent = '000';
+            document.getElementById('gaokaoDays').textContent = '  0';
             document.getElementById('gaokaoHours').textContent = '00';
             document.getElementById('gaokaoMinutes').textContent = '00';
             document.getElementById('gaokaoSeconds').textContent = '00';
@@ -261,7 +229,7 @@ const ClockApp = (function() {
         const minutesEl = document.getElementById('gaokaoMinutes');
         const secondsEl = document.getElementById('gaokaoSeconds');
 
-        if (daysEl) daysEl.textContent = String(days).padStart(3, '0');
+        if (daysEl) daysEl.textContent = String(days).padStart(3, ' ');
         if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
         if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
         if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');

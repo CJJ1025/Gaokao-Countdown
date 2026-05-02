@@ -171,6 +171,23 @@ const ClockPersonalize = (function() {
     }
 
     /**
+     * 导出配置
+     */
+    function exportConfig() {
+        const config = ClockCore.exportConfig();
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'clock-config.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    /**
      * 下载主题模板
      */
     async function downloadThemeTemplate() {
@@ -274,6 +291,7 @@ const ClockPersonalize = (function() {
      * 设置事件监听
      */
     function setupEventListeners() {
+        // 打开/关闭个性化面板
         document.getElementById('personalizeBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -291,22 +309,12 @@ const ClockPersonalize = (function() {
             document.getElementById('personalizeSidePanel')?.classList.remove('active');
         });
 
+        // 新建主题（使用prompt简单输入）
         document.getElementById('newThemeBtn')?.addEventListener('click', () => {
-            const modal = document.getElementById('newThemeModal');
-            modal?.classList.add('active');
-            document.getElementById('newThemeName')?.focus();
-        });
+            const name = prompt('输入主题名称：');
+            if (!name || !name.trim()) return;
 
-        document.getElementById('saveNewThemeBtn')?.addEventListener('click', () => {
-            const nameInput = document.getElementById('newThemeName');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                alert('请输入主题名称');
-                return;
-            }
-
-            let finalName = name;
+            let finalName = name.trim();
             const customThemes = ClockCore.get('customThemes') || [];
             while (customThemes.some(t => t.name === finalName)) {
                 finalName += 'c';
@@ -318,31 +326,18 @@ const ClockPersonalize = (function() {
                 customCss: currentTheme?.customCss || ''
             });
 
-            document.getElementById('newThemeModal')?.classList.remove('active');
-            nameInput.value = '';
             ClockTheme.applyTheme(finalName);
             renderCustomThemesList();
         });
 
-        document.getElementById('closeNewThemeModal')?.addEventListener('click', () => {
-            document.getElementById('newThemeModal')?.classList.remove('active');
-        });
-
+        // 导入主题文件夹
         document.getElementById('importThemeFolderBtn')?.addEventListener('click', importFolderTheme);
-        document.getElementById('downloadTemplateBtn')?.addEventListener('click', downloadThemeTemplate);
 
-        document.getElementById('resetThemeBtn')?.addEventListener('click', () => {
-            ClockTheme.applyTheme('vscode');
-        });
-
+        // 元素调整
         document.getElementById('adjustElementSelect')?.addEventListener('change', handleElementSelect);
 
         document.querySelectorAll('.adjust-btn[data-dir]').forEach(btn => {
             btn.addEventListener('click', () => handleElementAdjust(btn.dataset.dir));
-        });
-
-        document.querySelectorAll('.adjust-btn[data-z]').forEach(btn => {
-            btn.addEventListener('click', () => handleZIndexAdjust(btn.dataset.z));
         });
 
         document.getElementById('resetElementBtn')?.addEventListener('click', handleResetElement);
@@ -378,6 +373,7 @@ const ClockPersonalize = (function() {
         init,
         renderCustomThemesList,
         importFolderTheme,
-        downloadThemeTemplate
+        downloadThemeTemplate,
+        exportConfig
     };
 })();

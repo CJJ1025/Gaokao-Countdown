@@ -190,7 +190,7 @@ const ClockCore = (function() {
         const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
         return {
-            hours: String(hours).padStart(2, '0'),
+            hours: hours > 0 ? String(hours).padStart(2, ' ') : '',
             mins: String(mins).padStart(2, '0'),
             secs: String(secs).padStart(2, '0')
         };
@@ -264,20 +264,22 @@ const ClockCore = (function() {
         if (!controlBar) return;
 
         let hideTimer = null;
-        const HIDE_DELAY = 5000; // 5秒
+        const HIDE_DELAY = 3000; // 3秒
 
         function showControlBar() {
             controlBar.classList.remove('hidden');
-            resetHideTimer();
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
         }
 
         function hideControlBar() {
+            // 如果侧边栏打开，不隐藏
+            const sidePanel = document.getElementById('personalizeSidePanel');
+            if (sidePanel && sidePanel.classList.contains('active')) {
+                hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
+                return;
+            }
             controlBar.classList.add('hidden');
-        }
-
-        function resetHideTimer() {
-            clearTimeout(hideTimer);
-            hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
         }
 
         // 监听用户操作
@@ -286,20 +288,29 @@ const ClockCore = (function() {
             document.addEventListener(event, showControlBar, { passive: true });
         });
 
+        // 控制栏本身悬停时保持显示
+        controlBar.addEventListener('mouseenter', () => {
+            controlBar.classList.remove('hidden');
+            clearTimeout(hideTimer);
+        });
+        controlBar.addEventListener('mouseleave', () => {
+            hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
+        });
+
         // 侧边栏活动时不隐藏
         const sidePanel = document.getElementById('personalizeSidePanel');
         if (sidePanel) {
             sidePanel.addEventListener('mouseenter', () => {
-                clearTimeout(hideTimer);
                 controlBar.classList.remove('hidden');
+                clearTimeout(hideTimer);
             });
             sidePanel.addEventListener('mouseleave', () => {
-                resetHideTimer();
+                hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
             });
         }
 
         // 启动计时器
-        resetHideTimer();
+        hideTimer = setTimeout(hideControlBar, HIDE_DELAY);
     }
 
     /**

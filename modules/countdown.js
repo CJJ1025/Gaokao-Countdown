@@ -76,9 +76,13 @@ const ClockCountdown = (function() {
      */
     function updateDisplay() {
         const time = ClockCore.formatTime(timerRemaining);
-        document.getElementById('countdownHours').textContent = time.hours;
-        document.getElementById('countdownMinutes').textContent = time.mins;
-        document.getElementById('countdownSeconds').textContent = time.secs;
+        const countdownTime = document.getElementById('countdownTime');
+        
+        if (time.hours) {
+            countdownTime.innerHTML = `<span id="countdownHours">${time.hours}</span>:<span id="countdownMinutes">${time.mins}</span>:<span id="countdownSeconds">${time.secs}</span>`;
+        } else {
+            countdownTime.innerHTML = `<span id="countdownMinutes">${time.mins}</span>:<span id="countdownSeconds">${time.secs}</span>`;
+        }
     }
 
     /**

@@ -3,15 +3,15 @@
  * 处理课表加载、保存、自动触发倒计时等功能
  */
 
-const ClockSchedule = (function() {
+const ClockSchedule = (function () {
     'use strict';
 
     const defaultSchedule = [
-        { id: 1, label: '小练时间', days: [1, 2, 3, 4, 5], start: '18:50', end: '19:20' },
-        { id: 2, label: '自修时间', days: [1, 2, 3, 4, 5], start: '19:20', end: '20:00' },
-        { id: 3, label: '自修时间', days: [1, 2, 3, 4, 5], start: '20:10', end: '20:50' },
-        { id: 4, label: '晚读时间', days: [1, 2, 3, 4, 5], start: '20:50', end: '21:10' },
-        { id: 5, label: '自修时间', days: [1, 2, 3, 4, 5], start: '21:20', end: '22:00' }
+        { id: 1, label: '小练时间', days: [0, 1, 2, 3, 4, 5, 6], start: '18:50', end: '19:20' },
+        { id: 2, label: '自修时间', days: [0, 1, 2, 3, 4, 5, 6], start: '19:20', end: '20:00' },
+        { id: 3, label: '自修时间', days: [0, 1, 2, 3, 4, 5, 6], start: '20:10', end: '20:50' },
+        { id: 4, label: '晚读时间', days: [0, 1, 2, 3, 4, 5, 6], start: '20:50', end: '21:10' },
+        { id: 5, label: '自修时间', days: [0, 1, 2, 3, 4, 5, 6], start: '21:20', end: '22:00' }
     ];
 
     const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -226,7 +226,7 @@ const ClockSchedule = (function() {
 /**
  * 课表UI模块 - 处理课表编辑界面
  */
-const ClockScheduleUI = (function() {
+const ClockScheduleUI = (function () {
     'use strict';
 
     let currentEditId = null;
